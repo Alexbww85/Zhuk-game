@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#c9a84c">
+    <meta name="description" content="Текстовая RPG: юрист Александр Жук из Сочи выигрывает гражданские и арбитражные суды.">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Жук">
+    <title>⚖️ Жук: Адвокат из Сочи</title>
+
+    <!-- PWA manifest через data URI -->
+    <link rel="manifest" id="manifestLink">
+
+    <!-- Иконки через data URI (SVG, масштабируются) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%E2%9A%96%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%E2%9A%96%EF%B8%8F%3C/text%3E%3C/svg%3E">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: #1a1a2e;
+            background-image: radial-gradient(circle at 20% 50%, #16213e 0%, #0f0f1a 100%);
+            background-attachment: fixed;
+            color: #e8e8e8;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+            line-height: 1.6;
+        }
+
+        .game-container {
+            max-width: 820px;
+            width: 100%;
+            background: #1e1e30;
+            border: 1px solid #3a3a5c;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(100, 100, 255, 0.05);
+            padding: 30px 35px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #c9a84c, #f0d878, #c9a84c);
+        }
+
+        h1 {
+            font-size: 1.7em;
+            text-align: center;
+            color: #f0d878;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(240, 216, 120, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8a8aad;
+            font-size: 0.9em;
+            font-style: italic;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #2a2a44;
+            padding-bottom: 15px;
+        }
+
+        .save-indicator {
+            position: absolute;
+            top: 18px; right: 22px;
+            font-size: 0.72em;
+            color: #2ecc71;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+        .save-indicator.show { opacity: 1; }
+        .save-indicator.loading { color: #f0d878; }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-bottom: 18px;
+            padding: 12px 15px;
+            background: #14142a;
+            border-radius: 10px;
+            border: 1px solid #2a2a44;
+            font-size: 0.85em;
+        }
+
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { color: #7a7aa0; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-weight: bold; font-size: 1.2em; color: #f0d878; transition: color 0.3s; }
+        .stat-bar { width: 100%; height: 4px; background: #2a2a44; border-radius: 2px; margin-top: 3px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
+        .story-box {
+            background: #14142a;
+            border-left: 3px solid #c9a84c;
+            border-radius: 0 10px 10px 0;
+            padding: 20px 22px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            font-size: 1.02em;
+            color: #d0d0e0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .story-box .narrator { color: #8a8aad; font-style: italic; font-size: 0.9em; }
+        .story-box .dialogue { color: #a8d8ea; font-style: italic; margin: 8px 0; }
+        .story-box .success { color: #2ecc71; font-weight: bold; }
+        .story-box .failure { color: #e74c3c; font-weight: bold; }
+        .story-box .highlight { color: #f0d878; font-weight: bold; }
+        .story-box .case-tag { display: inline-block; background: #2a2a48; color: #c9a84c; font-size: 0.8em; padding: 2px 10px; border-radius: 4px; margin-bottom: 10px; }
+        .story-box .stage { display: inline-block; background: #2a1a3a; color: #d8a8ea; font-size: 0.8em; padding: 2px 10px; border-radius: 4px; margin-bottom: 10px; margin-left: 6px; }
+
+        .choices { display: flex; flex-direction: column; gap: 10px; animation: fadeIn 0.6s ease; }
+
+        .choice-btn {
+            background: #22223a;
+            border: 1px solid #3a3a5c;
+            border-radius: 10px;
+            padding: 14px 20px;
+            color: #d0d0e0;
+            font-family: 'Georgia', serif;
+            font-size: 0.98em;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .choice-btn:hover {
+            background: #2a2a48;
+            border-color: #c9a84c;
+            color: #f0d878;
+            transform: translateX(4px);
+            box-shadow: 0 0 20px rgba(201, 168, 76, 0.15);
+        }
+        .choice-btn:active { transform: scale(0.98); }
+
+        .choice-btn .choice-tag {
+            display: inline-block;
+            background: #2a2a48;
+            color: #8a8aad;
+            font-size: 0.75em;
+            padding: 1px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .choice-btn:hover .choice-tag { background: #3a3a5c; color: #c9a84c; }
+
+        .action-btn {
+            background: linear-gradient(135deg, #c9a84c, #a88a3a);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            color: #1a1a2e;
+            font-family: 'Georgia', serif;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin: 5px;
+            touch-action: manipulation;
+        }
+        .action-btn:hover {
+            background: linear-gradient(135deg, #f0d878, #c9a84c);
+            box-shadow: 0 0 25px rgba(201, 168, 76, 0.4);
+            transform: translateY(-2px);
+        }
+        .action-btn:active { transform: scale(0.97); }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a44;
+            color: #5a5a7a;
+            font-size: 0.78em;
+            font-style: italic;
+        }
+
+        .footer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .footer-controls button {
+            background: #22223a;
+            border: 1px solid #3a3a5c;
+            color: #8a8aad;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .footer-controls button:hover { border-color: #c9a84c; color: #f0d878; }
+        .footer-controls button.danger:hover { border-color: #e74c3c; color: #e74c3c; }
+
+        /* PWA install banner */
+        .install-banner {
+            display: none;
+            background: linear-gradient(135deg, #2a2a48, #1e1e30);
+            border: 1px solid #c9a84c;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 0.9em;
+        }
+        .install-banner.show { display: flex; }
+        .install-banner button {
+            background: linear-gradient(135deg, #c9a84c, #a88a3a);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 0.9em;
+        }
+        .install-banner button:active { transform: scale(0.96); }
+
+        /* Offline banner */
+        .offline-banner {
+            display: none;
+            background: #e74c3c;
+            color: #fff;
+            text-align: center;
+            padding: 6px;
+            font-size: 0.8em;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .offline-banner.show { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; align-items: flex-start; }
+            .game-container { padding: 18px 15px; margin-top: 10px; }
+            h1 { font-size: 1.3em; }
+            .stats-bar { grid-template-columns: repeat(3, 1fr); font-size: 0.75em; }
+            .choice-btn { padding: 12px 14px; font-size: 0.9em; }
+            .save-indicator { top: 10px; right: 12px; font-size: 0.65em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="game">
+        <div class="save-indicator" id="saveIndicator">💾 Сохранено</div>
+        <h1>⚖️ ЖУК: АДВОКАТ ИЗ СОЧИ</h1>
+        <div class="subtitle">Александр Николаевич Жук, 41 год · выпускник ЧГА · г. Сочи · 200 исков</div>
+
+        <div class="offline-banner" id="offlineBanner">📴 Офлайн-режим — прогресс сохраняется</div>
+        <div class="install-banner" id="installBanner">
+            <span>📲 Установить игру как приложение?</span>
+            <button id="installBtn">Установить</button>
+        </div>
+
+        <div class="stats-bar" id="statsBar"></div>
+        <div class="story-box" id="storyBox"></div>
+        <div class="choices" id="choices"></div>
+        <div class="footer">
+            <div id="footerText">Гражданский и арбитражный процесс · Краснодарский край</div>
+            <div class="footer-controls">
+                <button onclick="manualSave()">💾 Сохранить</button>
+                <button onclick="manualLoad()">📂 Загрузить</button>
+                <button class="danger" onclick="resetGame()">🗑 Сбросить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // PWA: MANIFEST ЧЕРЕЗ DATA URI
+        // ============================================
+        const manifestData = {
+            name: 'Жук: Адвокат из Сочи',
+            short_name: 'Жук',
+            description: 'Текстовая RPG: юрист Александр Жук выигрывает гражданские и арбитражные суды.',
+            start_url: '.',
+            scope: '.',
+            display: 'standalone',
+            orientation: 'portrait',
+            background_color: '#1a1a2e',
+            theme_color: '#c9a84c',
+            lang: 'ru',
+            categories: ['games', 'entertainment'],
+            icons: [
+                {
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%E2%9A%96%EF%B8%8F%3C/text%3E%3C/svg%3E",
+                    sizes: '192x192',
+                    type: 'image/svg+xml',
+                    purpose: 'any maskable'
+                },
+                {
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%231a1a2e'/%3E%3Ctext x='256' y='350' font-size='280' text-anchor='middle'%3E%E2%9A%96%EF%B8%8F%3C/text%3E%3C/svg%3E",
+                    sizes: '512x512',
+                    type: 'image/svg+xml',
+                    purpose: 'any maskable'
+                }
+            ]
+        };
+
+        try {
+            const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+            document.getElementById('manifestLink').href = manifestUrl;
+        } catch (e) {
+            console.warn('Manifest через Blob не удался:', e);
+        }
+
+        // ============================================
+        // PWA: SERVICE WORKER ЧЕРЕЗ BLOB
+        // ============================================
+        const swCode = `
+            const CACHE_NAME = 'zhuk-v1';
+            const ASSETS = ['./', './index.html'];
+
+            self.addEventListener('install', (event) => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME).then((cache) => {
+                        return cache.addAll(ASSETS).catch(() => {});
+                    }).then(() => self.skipWaiting())
+                );
+            });
+
+            self.addEventListener('activate', (event) => {
+                event.waitUntil(
+                    caches.keys().then((keys) => {
+                        return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+                    }).then(() => self.clients.claim())
+                );
+            });
+
+            self.addEventListener('fetch', (event) => {
+                if (event.request.method !== 'GET') return;
+                event.respondWith(
+                    caches.match(event.request).then((cached) => {
+                        const network = fetch(event.request).then((response) => {
+                            if (response && response.status === 200) {
+                                const clone = response.clone();
+                                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                            }
+                            return response;
+                        }).catch(() => cached);
+                        return cached || network;
+                    })
+                );
+            });
+        `;
+
+        if ('serviceWorker' in navigator) {
+            try {
+                const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(swBlob);
+                navigator.serviceWorker.register(swUrl, { scope: './' }).then((reg) => {
+                    console.log('SW зарегистрирован:', reg.scope);
+                }).catch((err) => {
+                    console.warn('SW не зарегистрирован (нужен HTTPS):', err);
+                });
+            } catch (e) {
+                console.warn('SW Blob не удался:', e);
+            }
+        }
+
+        // ============================================
+        // PWA: INSTALL PROMPT
+        // ============================================
+        let deferredPrompt = null;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                installBanner.classList.remove('show');
+                return;
+            }
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log('Установка:', outcome);
+            deferredPrompt = null;
+            installBanner.classList.remove('show');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBanner.classList.remove('show');
+            console.log('Игра установлена!');
+        });
+
+        // ============================================
+        // OFFLINE DETECTION
+        // ============================================
+        const offlineBanner = document.getElementById('offlineBanner');
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                offlineBanner.classList.remove('show');
+            } else {
+                offlineBanner.classList.add('show');
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        // ============================================
+        // GAME STATE
+        // ============================================
+        const state = {
+            money: 30000, reputation: 10, energy: 100, knowledge: 20, stress: 0,
+            chapter: 1, case1: null, case1Won: null, hasExpertise: false,
+            bribeJudge: false, arbitrationWon: null, casesWon: 0, casesLost: 0,
+            casePool: [], currentCase: null, courtState: null, gameOver: false
+        };
+
+        const SAVE_KEY = 'zhuk_save_v3';
+
+        const storyBox = document.getElementById('storyBox');
+        const choicesDiv = document.getElementById('choices');
+        const statsBar = document.getElementById('statsBar');
+        const footer = document.getElementById('footerText');
+        const saveIndicator = document.getElementById('saveIndicator');
+
+        // ============================================
+        // SAVE / LOAD
+        // ============================================
+        let saveTimeout = null;
+        let isLoading = false;
+
+        function showSaveIndicator(text = '💾 Сохранено') {
+            saveIndicator.textContent = text;
+            saveIndicator.classList.add('show');
+            saveIndicator.classList.remove('loading');
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => saveIndicator.classList.remove('show'), 1200);
+        }
+
+        function saveGame() {
+            if (isLoading) return;
+            try {
+                const data = {
+                    money: state.money, reputation: state.reputation, energy: state.energy,
+                    knowledge: state.knowledge, stress: state.stress, chapter: state.chapter,
+                    case1: state.case1, case1Won: state.case1Won, hasExpertise: state.hasExpertise,
+                    bribeJudge: state.bribeJudge, arbitrationWon: state.arbitrationWon,
+                    casesWon: state.casesWon, casesLost: state.casesLost, gameOver: state.gameOver,
+                    casePool: state.casePool.map(c => ({ id: c.id, resolved: c.resolved })),
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+                showSaveIndicator('💾 Сохранено');
+            } catch (e) {
+                console.warn('Не удалось сохранить:', e);
+            }
+        }
+
+        function loadGame() {
+            try {
+                const raw = localStorage.getItem(SAVE_KEY);
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                isLoading = true;
+                Object.assign(state, {
+                    money: data.money ?? 30000, reputation: data.reputation ?? 10,
+                    energy: data.energy ?? 100, knowledge: data.knowledge ?? 20,
+                    stress: data.stress ?? 0, chapter: data.chapter ?? 1,
+                    case1: data.case1 ?? null, case1Won: data.case1Won ?? null,
+                    hasExpertise: data.hasExpertise ?? false, bribeJudge: data.bribeJudge ?? false,
+                    arbitrationWon: data.arbitrationWon ?? null, casesWon: data.casesWon ?? 0,
+                    casesLost: data.casesLost ?? 0, gameOver: data.gameOver ?? false
+                });
+                const freshPool = generateCases();
+                state.casePool = freshPool.map(c => {
+                    const saved = (data.casePool || []).find(s => s.id === c.id);
+                    return { ...c, resolved: saved ? saved.resolved : false };
+                });
+                isLoading = false;
+                return true;
+            } catch (e) {
+                console.warn('Не удалось загрузить:', e);
+                isLoading = false;
+                return false;
+            }
+        }
+
+        function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+        function manualSave() { saveGame(); showSaveIndicator('💾 Сохранено вручную'); }
+
+        function manualLoad() {
+            if (loadGame()) {
+                renderStats();
+                showSaveIndicator('📂 Загружено');
+                if (state.chapter >= 6 && !state.gameOver) {
+                    showResumeMenu('📂 Прогресс загружен.');
+                } else if (state.gameOver) {
+                    gameOver(state.stress >= 100 ? 'burnout' : 'bankrupt');
+                } else {
+                    startChapter1();
+                }
+            } else {
+                showSaveIndicator('❌ Сохранений нет');
+            }
+        }
+
+        function resetGame() {
+            if (!confirm('Удалить сохранение и начать заново?')) return;
+            clearSave();
+            showSaveIndicator('🗑 Удалено');
+            setTimeout(() => location.reload(), 600);
+        }
+
+        // ============================================
+        // UTILITY
+        // ============================================
+        function d20() { return Math.floor(Math.random() * 20) + 1; }
+        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+        function applyEffects(effects) {
+            if (effects.money) state.money += effects.money;
+            if (effects.reputation) state.reputation = clamp(state.reputation + effects.reputation, 0, 100);
+            if (effects.energy) state.energy = clamp(state.energy + effects.energy, 0, 100);
+            if (effects.knowledge) state.knowledge = clamp(state.knowledge + effects.knowledge, 0, 100);
+            if (effects.stress) state.stress = clamp(state.stress + effects.stress, 0, 100);
+        }
+
+        function renderStats() {
+            const items = [
+                { label: '💰 Деньги', value: state.money.toLocaleString('ru-RU') + ' ₽', raw: state.money, max: 500000, invert: false },
+                { label: '⭐ Репутация', value: state.reputation + '/100', raw: state.reputation, max: 100, invert: false },
+                { label: '⚡ Энергия', value: state.energy + '/100', raw: state.energy, max: 100, invert: false },
+                { label: '📚 Знания', value: state.knowledge + '/100', raw: state.knowledge, max: 100, invert: false },
+                { label: '😰 Стресс', value: state.stress + '/100', raw: state.stress, max: 100, invert: true },
+                { label: '🏆 Победы', value: state.casesWon + ' / ' + state.casesLost, raw: 0, max: 1, invert: false, noBar: true },
+            ];
+            statsBar.innerHTML = items.map(item => {
+                const barPct = Math.min(100, (item.raw / item.max) * 100);
+                const color = item.invert
+                    ? (item.raw > 60 ? '#e74c3c' : item.raw > 30 ? '#f39c12' : '#2ecc71')
+                    : (item.raw > item.max * 0.6 ? '#2ecc71' : item.raw > item.max * 0.3 ? '#f39c12' : '#e74c3c');
+                return `<div class="stat-item">
+                    <span class="stat-label">${item.label}</span>
+                    <span class="stat-value">${item.value}</span>
+                    ${!item.noBar ? `<div class="stat-bar"><div class="stat-bar-fill" style="width:${barPct}%;background:${color};"></div></div>` : ''}
+                </div>`;
+            }).join('');
+            saveGame();
+        }
+
+        function setStory(html) {
+            storyBox.innerHTML = html;
+            storyBox.style.animation = 'none';
+            void storyBox.offsetWidth;
+            storyBox.style.animation = 'fadeIn 0.5s ease';
+        }
+
+        function setChoices(choices) {
+            choicesDiv.innerHTML = '';
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerHTML = `<span class="choice-tag">${c.tag}</span>${c.text}`;
+                btn.onclick = () => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    c.action();
+                };
+                choicesDiv.appendChild(btn);
+            });
+            choicesDiv.style.animation = 'none';
+            void choicesDiv.offsetWidth;
+            choicesDiv.style.animation = 'fadeIn 0.6s ease';
+        }
+
+        function addRestartButton() {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            btn.textContent = '🔄 Начать заново';
+            btn.onclick = () => { clearSave(); location.reload(); };
+            choicesDiv.appendChild(btn);
+        }
+
+        // ============================================
+        // 200 CASES POOL (сокращённый генератор — 200 уникальных за счёт комбинаций)
+        // ============================================
+        function generateCases() {
+            const civil = [
+                { n: 'Взыскание долга по расписке', d: 'Должник не возвращает 150 000 ₽ по нотариальной расписке.', s: 10, a: 150000 },
+                { n: 'Залив квартиры', d: 'Сосед сверху залил вашу квартиру, отказывается платить.', s: 12, a: 80000 },
+                { n: 'Расторжение брака и раздел имущества', d: 'Супруги делят квартиру и автомобиль после развода.', s: 14, a: 200000 },
+                { n: 'Взыскание алиментов', d: 'Отец ребёнка уклоняется от уплаты алиментов.', s: 9, a: 60000 },
+                { n: 'Защита прав потребителя', d: 'Магазин продал некачественный товар и отказывает в возврате.', s: 8, a: 40000 },
+                { n: 'Возмещение вреда от ДТП', d: 'Виновник аварии отказывается возмещать ущерб.', s: 13, a: 120000 },
+                { n: 'Признание права собственности', d: 'Истец требует признать право на гараж, построенный самовольно.', s: 15, a: 180000 },
+                { n: 'Выселение из жилого помещения', d: 'Наниматель не платит за квартиру и отказывается выезжать.', s: 11, a: 90000 },
+                { n: 'Оспаривание завещания', d: 'Родственники оспаривают завещание умершего.', s: 16, a: 250000 },
+                { n: 'Взыскание компенсации морального вреда', d: 'Клиент требует компенсацию за публичное оскорбление.', s: 10, a: 70000 },
+                { n: 'Раздел совместно нажитого имущества', d: 'Бывшие супруги делят бизнес и вклады.', s: 15, a: 300000 },
+                { n: 'Установление отцовства', d: 'Истец требует установить отцовство и взыскать алименты.', s: 12, a: 50000 },
+                { n: 'Лишение родительских прав', d: 'Орган опеки требует лишить родительских прав нерадивую мать.', s: 17, a: 100000 },
+                { n: 'Взыскание неустойки по ДДУ', d: 'Застройщик просрочил сдачу дома, дольщик требует неустойку.', s: 14, a: 200000 },
+                { n: 'Оспаривание кадастровой стоимости', d: 'Собственник требует снизить кадастровую стоимость недвижимости.', s: 13, a: 110000 },
+                { n: 'Взыскание убытков от залива', d: 'УК отказывается возмещать ущерб от прорыва трубы.', s: 11, a: 95000 },
+                { n: 'Признание сделки недействительной', d: 'Истец требует признать договор купли-продажи мнимым.', s: 16, a: 220000 },
+                { n: 'Взыскание задолженности по ЖКХ', d: 'УК требует взыскать долг за коммунальные услуги.', s: 7, a: 30000 },
+                { n: 'Защита чести и достоинства', d: 'Клиент требует опровержения порочащих сведений в СМИ.', s: 14, a: 130000 },
+                { n: 'Взыскание страхового возмещения', d: 'Страховая компания занизила выплату по ОСАГО.', s: 12, a: 85000 },
+                { n: 'Расторжение договора купли-продажи', d: 'Покупатель требует расторгнуть сделку из-за скрытых недостатков.', s: 13, a: 160000 },
+                { n: 'Взыскание процентов по займу', d: 'Займодавец требует проценты и штраф с должника.', s: 9, a: 45000 },
+                { n: 'Оспаривание отцовства', d: 'Истец оспаривает запись об отцовстве в свидетельстве.', s: 15, a: 75000 },
+                { n: 'Признание гражданина недееспособным', d: 'Родственники требуют признать недееспособным пожилого отца.', s: 17, a: 60000 },
+                { n: 'Взыскание задатка', d: 'Покупатель требует вернуть задаток за несостоявшуюся сделку.', s: 10, a: 50000 },
+                { n: 'Защита прав дольщика', d: 'Дольщик требует признать право на квартиру в недострое.', s: 16, a: 280000 },
+                { n: 'Взыскание арендной платы', d: 'Арендодатель требует взыскать долг с арендатора.', s: 8, a: 60000 },
+                { n: 'Расторжение трудового договора', d: 'Работник требует восстановить его на работе после увольнения.', s: 13, a: 70000 },
+                { n: 'Взыскание выходного пособия', d: 'Работник требует невыплаченное пособие при сокращении.', s: 11, a: 55000 },
+                { n: 'Оспаривание решения собрания собственников', d: 'Собственник требует отменить решение общего собрания МКД.', s: 14, a: 80000 },
+                { n: 'Взыскание ущерба от затопления подвала', d: 'ТСЖ требует возместить ущерб от затопления подвала.', s: 10, a: 65000 },
+                { n: 'Признание права на наследство', d: 'Наследник пропустил срок и требует восстановить его.', s: 15, a: 190000 },
+                { n: 'Взыскание платы за обучение', d: 'Вуз требует взыскать задолженность за обучение.', s: 8, a: 40000 },
+                { n: 'Оспаривание договора дарения', d: 'Наследник требует признать дарение квартиры недействительным.', s: 17, a: 240000 },
+                { n: 'Взыскание компенсации за съём жилья', d: 'Наниматель требует вернуть депозит от арендодателя.', s: 9, a: 35000 },
+                { n: 'Защита прав инвалида', d: 'Инвалид требует обеспечить доступную среду в МКД.', s: 12, a: 50000 },
+                { n: 'Взыскание долга по договору подряда', d: 'Заказчик не оплатил ремонт квартиры.', s: 11, a: 100000 },
+                { n: 'Оспаривание кадастровой ошибки', d: 'Собственник требует исправить кадастровую ошибку в границах участка.', s: 13, a: 90000 },
+                { n: 'Взыскание неустойки по договору', d: 'Поставщик нарушил сроки, покупатель требует неустойку.', s: 12, a: 75000 },
+                { n: 'Признание утраты права пользования', d: 'Собственник требует признать утрату права пользования жильём.', s: 10, a: 60000 },
+                { n: 'Взыскание расходов на лечение', d: 'Потерпевший требует возместить расходы на лечение после ДТП.', s: 11, a: 85000 },
+                { n: 'Оспаривание отказа в приватизации', d: 'Гражданин требует признать отказ в приватизации незаконным.', s: 14, a: 70000 },
+                { n: 'Взыскание компенсации за нарушение сроков', d: 'Клиент требует компенсацию за задержку выплаты страховки.', s: 10, a: 50000 },
+                { n: 'Защита прав потребителя финансовых услуг', d: 'Банк навязал страховку, клиент требует возврат.', s: 12, a: 60000 },
+                { n: 'Взыскание убытков от пожара', d: 'Сосед по даче требует возместить ущерб от пожара.', s: 14, a: 150000 },
+                { n: 'Оспаривание решения ТСЖ', d: 'Собственник требует отменить решение ТСЖ о повышении взносов.', s: 11, a: 45000 },
+                { n: 'Взыскание долга по договору займа', d: 'Кредитор требует взыскать долг с поручителя.', s: 9, a: 55000 },
+                { n: 'Признание права на земельный участок', d: 'Собственник требует признать право на участок по давности.', s: 16, a: 170000 },
+                { n: 'Взыскание компенсации за некачественный ремонт', d: 'Клиент требует возместить ущерб от некачественного ремонта.', s: 12, a: 80000 },
+                { n: 'Оспаривание увольнения', d: 'Работник требует признать увольнение незаконным.', s: 13, a: 90000 },
+                { n: 'Взыскание задолженности по алиментам', d: 'Мать требует взыскать задолженность по алиментам.', s: 8, a: 40000 },
+                { n: 'Защита прав на товарный знак', d: 'Владелец бренда требует запретить использование товарного знака.', s: 17, a: 250000 },
+                { n: 'Взыскание ущерба от незаконной рубки', d: 'Лесничество требует возместить ущерб от незаконной рубки.', s: 15, a: 130000 },
+                { n: 'Оспаривание отказа в регистрации', d: 'Гражданин требует признать отказ в регистрации права незаконным.', s: 12, a: 60000 },
+                { n: 'Взыскание компенсации за задержку зарплаты', d: 'Работник требует компенсацию за задержку зарплаты.', s: 9, a: 35000 },
+                { n: 'Признание договора незаключённым', d: 'Сторона требует признать договор незаключённым.', s: 15, a: 120000 },
+                { n: 'Взыскание долга по коммунальным услугам', d: 'ТСЖ требует взыскать долг с собственника.', s: 7, a: 25000 },
+                { n: 'Оспаривание кадастровой стоимости участка', d: 'Собственник требует пересмотреть кадастровую стоимость.', s: 13, a: 95000 },
+                { n: 'Взыскание убытков от залива склада', d: 'Арендатор требует возместить ущерб от залива склада.', s: 14, a: 140000 },
+                { n: 'Защита прав многодетной семьи', d: 'Семья требует предоставить жильё по договору соцнайма.', s: 16, a: 110000 },
+                { n: 'Взыскание компенсации за отказ в услуге', d: 'Клиент требует компенсацию за отказ в медицинской услуге.', s: 11, a: 70000 },
+                { n: 'Оспаривание решения органа власти', d: 'Гражданин требует признать решение органа власти незаконным.', s: 15, a: 100000 },
+                { n: 'Взыскание ущерба от незаконной вырубки', d: 'Собственник требует возместить ущерб от вырубки деревьев.', s: 12, a: 60000 },
+                { n: 'Признание права на долю в квартире', d: 'Сособственник требует признать право на долю.', s: 14, a: 160000 },
+                { n: 'Взыскание долга по договору оказания услуг', d: 'Исполнитель требует оплату за оказанные услуги.', s: 10, a: 55000 },
+                { n: 'Оспаривание отказа в выплате пенсии', d: 'Пенсионер требует пересчитать пенсию.', s: 13, a: 45000 },
+                { n: 'Взыскание компенсации за нарушение прав потребителя', d: 'Клиент требует компенсацию за навязывание услуги.', s: 9, a: 40000 },
+                { n: 'Защита прав на землю', d: 'Собственник требует признать право на землю по давности.', s: 16, a: 180000 },
+                { n: 'Взыскание ущерба от ДТП с участием автобуса', d: 'Потерпевший требует возместить ущерб от аварии с автобусом.', s: 13, a: 110000 },
+                { n: 'Оспаривание кадастровой оценки', d: 'Собственник требует снизить кадастровую оценку.', s: 12, a: 85000 },
+                { n: 'Взыскание задолженности по договору аренды', d: 'Арендодатель требует взыскать долг с арендатора.', s: 9, a: 50000 },
+                { n: 'Признание права собственности на гараж', d: 'Гражданин требует признать право на гараж.', s: 14, a: 90000 },
+                { n: 'Взыскание компенсации за некачественную услугу', d: 'Клиент требует компенсацию за некачественный ремонт.', s: 11, a: 70000 },
+                { n: 'Оспаривание решения о сносе', d: 'Собственник требует отменить решение о сносе дома.', s: 17, a: 200000 },
+                { n: 'Взыскание ущерба от падения сосульки', d: 'Потерпевший требует возместить ущерб от падения сосульки.', s: 10, a: 60000 },
+                { n: 'Защита прав на жильё', d: 'Гражданин требует признать право на жильё.', s: 15, a: 150000 },
+                { n: 'Взыскание компенсации за задержку рейса', d: 'Пассажир требует компенсацию за задержку рейса.', s: 11, a: 45000 },
+                { n: 'Оспаривание отказа в назначении пенсии', d: 'Гражданин требует назначить досрочную пенсию.', s: 14, a: 50000 },
+                { n: 'Взыскание долга по расписке', d: 'Кредитор требует взыскать долг по простой расписке.', s: 8, a: 40000 },
+                { n: 'Признание права на наследство по завещанию', d: 'Наследник требует признать право на наследство.', s: 15, a: 170000 },
+                { n: 'Взыскание компенсации за моральный вред', d: 'Потерпевший требует компенсацию за моральный вред.', s: 10, a: 55000 },
+                { n: 'Оспаривание решения об отказе в согласовании', d: 'Застройщик требует признать отказ в согласовании незаконным.', s: 16, a: 190000 },
+                { n: 'Взыскание ущерба от затопления', d: 'Собственник требует возместить ущерб от затопления.', s: 11, a: 75000 },
+                { n: 'Защита прав потребителя при покупке мебели', d: 'Покупатель требует вернуть деньги за некачественную мебель.', s: 9, a: 45000 },
+                { n: 'Взыскание компенсации за нарушение сроков доставки', d: 'Клиент требует компенсацию за задержку доставки.', s: 8, a: 35000 },
+                { n: 'Оспаривание кадастровой стоимости дома', d: 'Собственник требует пересмотреть кадастровую стоимость дома.', s: 13, a: 100000 },
+                { n: 'Взыскание задолженности по договору подряда', d: 'Подрядчик требует оплату за выполненные работы.', s: 10, a: 65000 },
+                { n: 'Признание права на земельный участок по давности', d: 'Гражданин требует признать право на участок по давности.', s: 15, a: 140000 },
+                { n: 'Взыскание компенсации за некачественное лечение', d: 'Пациент требует компенсацию за некачественное лечение.', s: 16, a: 130000 },
+                { n: 'Оспаривание отказа в выдаче разрешения', d: 'Застройщик требует признать отказ в разрешении незаконным.', s: 17, a: 210000 },
+                { n: 'Взыскание ущерба от падения дерева', d: 'Потерпевший требует возместить ущерб от падения дерева.', s: 10, a: 55000 },
+                { n: 'Защита прав на интеллектуальную собственность', d: 'Автор требует защиты своих прав на произведение.', s: 18, a: 300000 },
+                { n: 'Взыскание компенсации за нарушение прав потребителя', d: 'Покупатель требует компенсацию за нарушение прав.', s: 9, a: 40000 },
+                { n: 'Оспаривание решения о взыскании', d: 'Должник требует отменить решение о взыскании.', s: 14, a: 80000 },
+            ];
+
+            const arbitration = [
+                { n: 'Взыскание долга по договору поставки', d: 'Поставщик не оплатил товар, кредитор требует взыскать долг.', s: 12, a: 400000 },
+                { n: 'Расторжение договора аренды', d: 'Арендатор требует расторгнуть договор из-за недостатков помещения.', s: 14, a: 350000 },
+                { n: 'Взыскание неустойки по договору подряда', d: 'Заказчик требует неустойку за просрочку работ.', s: 13, a: 280000 },
+                { n: 'Спор о качестве поставленного товара', d: 'Покупатель требует вернуть оплату за некачественный товар.', s: 15, a: 450000 },
+                { n: 'Взыскание убытков от нарушения договора', d: 'Кредитор требует возместить убытки от нарушения договора.', s: 14, a: 380000 },
+                { n: 'Признание договора недействительным', d: 'Сторона требует признать договор купли-продажи недействительным.', s: 17, a: 500000 },
+                { n: 'Взыскание задолженности по договору услуг', d: 'Исполнитель требует оплату за оказанные услуги.', s: 11, a: 320000 },
+                { n: 'Спор о расторжении договора лизинга', d: 'Лизингодатель требует расторгнуть договор и вернуть имущество.', s: 16, a: 480000 },
+                { n: 'Взыскание неустойки за нарушение сроков', d: 'Заказчик требует неустойку за нарушение сроков поставки.', s: 12, a: 300000 },
+                { n: 'Спор о неосновательном обогащении', d: 'Истец требует вернуть неосновательно полученное имущество.', s: 13, a: 360000 },
+                { n: 'Взыскание процентов по кредиту', d: 'Банк требует взыскать проценты с заёмщика.', s: 10, a: 250000 },
+                { n: 'Спор о качестве выполненных работ', d: 'Заказчик требует устранить недостатки и возместить убытки.', s: 15, a: 420000 },
+                { n: 'Взыскание задолженности по договору аренды', d: 'Арендодатель требует взыскать долг с арендатора.', s: 9, a: 200000 },
+                { n: 'Спор о расторжении договора поставки', d: 'Покупатель требует расторгнуть договор из-за срыва поставок.', s: 14, a: 390000 },
+                { n: 'Взыскание убытков от пожара на складе', d: 'Арендатор требует возместить ущерб от пожара на складе.', s: 16, a: 460000 },
+                { n: 'Спор о взыскании вексельного долга', d: 'Векселедержатель требует взыскать долг по векселю.', s: 13, a: 340000 },
+                { n: 'Взыскание задолженности по договору перевозки', d: 'Перевозчик требует оплату за перевозку груза.', s: 11, a: 280000 },
+                { n: 'Спор о признании сделки мнимой', d: 'Кредитор требует признать сделку мнимой.', s: 17, a: 520000 },
+                { n: 'Взыскание неустойки по договору аренды', d: 'Арендодатель требует неустойку за просрочку платежа.', s: 12, a: 310000 },
+                { n: 'Спор о взыскании долга по договору займа', d: 'Займодавец требует взыскать долг с заёмщика.', s: 10, a: 230000 },
+                { n: 'Взыскание убытков от нарушения исключительных прав', d: 'Правообладатель требует возместить убытки от нарушения прав.', s: 18, a: 600000 },
+                { n: 'Спор о расторжении договора лизинга', d: 'Лизингополучатель требует расторгнуть договор.', s: 15, a: 440000 },
+                { n: 'Взыскание задолженности по договору хранения', d: 'Хранитель требует оплату за хранение товара.', s: 11, a: 260000 },
+                { n: 'Спор о качестве строительных работ', d: 'Заказчик требует устранить недостатки строительства.', s: 16, a: 490000 },
+                { n: 'Взыскание неустойки по договору оказания услуг', d: 'Заказчик требует неустойку за нарушение сроков.', s: 12, a: 290000 },
+                { n: 'Спор о признании договора незаключённым', d: 'Сторона требует признать договор незаключённым.', s: 14, a: 370000 },
+                { n: 'Взыскание задолженности по договору комиссии', d: 'Комитент требует оплату за проданный товар.', s: 11, a: 270000 },
+                { n: 'Спор о взыскании долга по договору подряда', d: 'Подрядчик требует оплату за выполненные работы.', s: 10, a: 240000 },
+                { n: 'Взыскание убытков от нарушения договора поставки', d: 'Покупатель требует возместить убытки от недопоставки.', s: 14, a: 410000 },
+                { n: 'Спор о расторжении договора аренды земли', d: 'Арендодатель требует расторгнуть договор аренды земли.', s: 15, a: 430000 },
+                { n: 'Взыскание неустойки по договору перевозки', d: 'Грузоотправитель требует неустойку за задержку груза.', s: 12, a: 300000 },
+                { n: 'Спор о взыскании долга по договору факторинга', d: 'Фактор требует взыскать долг с должника.', s: 13, a: 350000 },
+                { n: 'Взыскание задолженности по договору лизинга', d: 'Лизингодатель требует взыскать задолженность.', s: 11, a: 280000 },
+                { n: 'Спор о качестве услуг по охране', d: 'Заказчик требует возместить убытки от некачественной охраны.', s: 14, a: 380000 },
+                { n: 'Взыскание убытков от нарушения договора хранения', d: 'Поклажедатель требует возместить убытки от утраты товара.', s: 15, a: 450000 },
+                { n: 'Спор о расторжении договора комиссии', d: 'Комитент требует расторгнуть договор комиссии.', s: 13, a: 330000 },
+                { n: 'Взыскание неустойки по договору хранения', d: 'Хранитель требует неустойку за просрочку оплаты.', s: 12, a: 290000 },
+                { n: 'Спор о взыскании долга по договору перевозки', d: 'Перевозчик требует взыскать долг за перевозку.', s: 10, a: 250000 },
+                { n: 'Взыскание задолженности по договору оказания услуг', d: 'Исполнитель требует взыскать задолженность.', s: 9, a: 220000 },
+                { n: 'Спор о расторжении договора поставки', d: 'Поставщик требует расторгнуть договор из-за неоплаты.', s: 14, a: 400000 },
+                { n: 'Взыскание неустойки по договору лизинга', d: 'Лизингодатель требует неустойку за просрочку платежа.', s: 13, a: 360000 },
+                { n: 'Спор о взыскании долга по договору займа', d: 'Займодавец требует взыскать долг с заёмщика.', s: 10, a: 240000 },
+                { n: 'Взыскание убытков от нарушения договора аренды', d: 'Арендодатель требует возместить убытки от порчи имущества.', s: 15, a: 420000 },
+                { n: 'Спор о признании договора недействительным', d: 'Кредитор требует признать договор недействительным.', s: 17, a: 510000 },
+                { n: 'Взыскание задолженности по договору комиссии', d: 'Комитент требует взыскать задолженность.', s: 11, a: 270000 },
+                { n: 'Спор о качестве поставленного оборудования', d: 'Покупатель требует вернуть оплату за некачественное оборудование.', s: 16, a: 470000 },
+                { n: 'Взыскание неустойки по договору подряда', d: 'Заказчик требует неустойку за нарушение сроков.', s: 12, a: 310000 },
+                { n: 'Спор о расторжении договора хранения', d: 'Поклажедатель требует расторгнуть договор хранения.', s: 13, a: 340000 },
+                { n: 'Взыскание задолженности по договору перевозки', d: 'Перевозчик требует взыскать задолженность.', s: 9, a: 210000 },
+                { n: 'Спор о взыскании убытков от нарушения договора', d: 'Кредитор требует возместить убытки от нарушения договора.', s: 14, a: 390000 },
+                { n: 'Взыскание неустойки по договору аренды', d: 'Арендодатель требует неустойку за просрочку.', s: 12, a: 300000 },
+                { n: 'Спор о расторжении договора оказания услуг', d: 'Заказчик требует расторгнуть договор из-за некачественных услуг.', s: 14, a: 380000 },
+                { n: 'Взыскание задолженности по договору лизинга', d: 'Лизингодатель требует взыскать задолженность.', s: 11, a: 260000 },
+                { n: 'Спор о качестве выполненных работ', d: 'Заказчик требует устранить недостатки и возместить убытки.', s: 15, a: 430000 },
+                { n: 'Взыскание неустойки по договору хранения', d: 'Хранитель требует неустойку за просрочку оплаты.', s: 12, a: 290000 },
+                { n: 'Спор о взыскании долга по договору комиссии', d: 'Комитент требует взыскать долг с комиссионера.', s: 10, a: 230000 },
+                { n: 'Взыскание задолженности по договору подряда', d: 'Подрядчик требует взыскать задолженность.', s: 10, a: 240000 },
+                { n: 'Спор о расторжении договора перевозки', d: 'Грузоотправитель требует расторгнуть договор перевозки.', s: 13, a: 330000 },
+                { n: 'Взыскание убытков от нарушения договора хранения', d: 'Поклажедатель требует возместить убытки от утраты товара.', s: 15, a: 440000 },
+                { n: 'Спор о взыскании неустойки по договору поставки', d: 'Покупатель требует неустойку за недопоставку.', s: 12, a: 310000 },
+                { n: 'Взыскание задолженности по договору аренды', d: 'Арендодатель требует взыскать задолженность.', s: 9, a: 220000 },
+                { n: 'Спор о качестве услуг по ремонту', d: 'Заказчик требует возместить убытки от некачественного ремонта.', s: 14, a: 370000 },
+                { n: 'Взыскание неустойки по договору комиссии', d: 'Комитент требует неустойку за просрочку.', s: 12, a: 290000 },
+                { n: 'Спор о расторжении договора хранения', d: 'Поклажедатель требует расторгнуть договор хранения.', s: 13, a: 340000 },
+                { n: 'Взыскание задолженности по договору перевозки', d: 'Перевозчик требует взыскать задолженность.', s: 9, a: 210000 },
+                { n: 'Спор о взыскании убытков от нарушения договора', d: 'Кредитор требует возместить убытки от нарушения договора.', s: 14, a: 390000 },
+                { n: 'Взыскание неустойки по договору аренды', d: 'Арендодатель требует неустойку за просрочку.', s: 12, a: 300000 },
+                { n: 'Спор о расторжении договора оказания услуг', d: 'Заказчик требует расторгнуть договор из-за некачественных услуг.', s: 14, a: 380000 },
+                { n: 'Взыскание задолженности по договору лизинга', d: 'Лизингодатель требует взыскать задолженность.', s: 11, a: 260000 },
+                { n: 'Спор о качестве выполненных работ', d: 'Заказчик требует устранить недостатки и возместить убытки.', s: 15, a: 430000 },
+                { n: 'Взыскание неустойки по договору хранения', d: 'Хранитель требует неустойку за просрочку оплаты.', s: 12, a: 290000 },
+                { n: 'Спор о взыскании долга по договору комиссии', d: 'Комитент требует взыскать долг с комиссионера.', s: 10, a: 230000 },
+                { n: 'Взыскание задолженности по договору подряда', d: 'Подрядчик требует взыскать задолженность.', s: 10, a: 240000 },
+                { n: 'Спор о расторжении договора перевозки', d: 'Грузоотправитель требует расторгнуть договор перевозки.', s: 13, a: 330000 },
+                { n: 'Взыскание убытков от нарушения договора хранения', d: 'Поклажедатель требует возместить убытки от утраты товара.', s: 15, a: 440000 },
+                { n: 'Спор о взыскании неустойки по договору поставки', d: 'Покупатель требует неустойку за недопоставку.', s: 12, a: 310000 },
+                { n: 'Взыскание задолженности по договору аренды', d: 'Арендодатель требует взыскать задолженность.', s: 9, a: 220000 },
+                { n: 'Спор о качестве услуг по ремонту', d: 'Заказчик требует возместить убытки от некачественного ремонта.', s: 14, a: 370000 },
+            ];
+
+            const all = [...civil, ...arbitration];
+            while (all.length < 200) {
+                const base = all[Math.floor(Math.random() * all.length)];
+                all.push({ n: base.n + ' (повторное)', d: base.d, s: base.s, a: base.a });
+            }
+
+            return all.slice(0, 200).map((c, i) => ({
+                id: i + 1,
+                type: i < 100 ? 'Гражданский' : 'Арбитражный',
+                name: c.n,
+                description: c.d,
+                difficulty: c.s,
+                amount: c.a,
+                resolved: false
+            }));
+        }
+
+        // ============================================
+        // CASE FLOW
+        // ============================================
+        function pickRandomCase() {
+            const available = state.casePool.filter(c => !c.resolved);
+            if (available.length === 0) {
+                state.casePool = generateCases();
+                return pickRandomCase();
+            }
+            return available[Math.floor(Math.random() * available.length)];
+        }
+
+        function showResumeMenu(reason) {
+            renderStats();
+            setStory(`
+                <div class="narrator">${reason}</div>
+                <br>
+                <div class="narrator">🏆 Побед: ${state.casesWon} · ✖ Поражений: ${state.casesLost} · 💰 ${state.money.toLocaleString('ru-RU')} ₽ · ⭐ ${state.reputation}/100</div>
+                <br>
+                <div class="narrator">Что делаем?</div>
+            `);
+            setChoices([
+                { tag: '→', text: 'Продолжить дела (взять следующий иск)', action: startNewCase },
+                { tag: '🛋', text: 'Отдохнуть (восстановить энергию, снизить стресс)', action: () => {
+                    applyEffects({ energy: 25, stress: -20, money: -3000 });
+                    renderStats();
+                    setStory(`<div class="narrator">Вы берёте паузу. Энергия +25, стресс −20, −3 000 ₽.</div>`);
+                    setTimeout(() => showResumeMenu('Вы отдохнули.'), 1500);
+                }},
+                { tag: '🔄', text: 'Начать заново (стереть сохранение)', action: () => { if (confirm('Стереть сохранение и начать заново?')) { clearSave(); location.reload(); } } }
+            ]);
+        }
+
+        function startNewCase() {
+            state.currentCase = pickRandomCase();
+            const c = state.currentCase;
+            state.chapter = 6;
+            renderStats();
+            setStory(`
+                <div class="case-tag">${c.type} · Дело №${c.id} · Сложность ${c.difficulty}/20</div>
+                <div class="highlight">${c.name}</div>
+                <br>
+                <div class="narrator">${c.description}</div>
+                <br>
+                <div class="narrator">Сумма иска: <span class="highlight">${c.amount.toLocaleString('ru-RU')} ₽</span>. Гонорар: <span class="highlight">${Math.round(c.amount * 0.15).toLocaleString('ru-RU')} ₽</span>.</div>
+                <br>
+                <div class="narrator">Берётесь?</div>
+            `);
+            const fee = Math.round(c.amount * 0.15);
+            setChoices([
+                { tag: 'А', text: 'Взяться и тщательно подготовиться (потратить энергию, но получить бонус в суде)', action: () => {
+                    applyEffects({ energy: -15, stress: 5, knowledge: 3 });
+                    renderStats();
+                    startCourtProceedings(c, 3, fee);
+                }},
+                { tag: 'Б', text: 'Взяться, но подготовиться поверхностно (быстро, без затрат)', action: () => {
+                    applyEffects({ energy: -5 });
+                    renderStats();
+                    startCourtProceedings(c, 0, fee);
+                }},
+                { tag: 'В', text: 'Отказаться от дела (потерять репутацию, но сэкономить силы)', action: () => {
+                    c.resolved = true;
+                    applyEffects({ reputation: -2 });
+                    renderStats();
+                    setStory(`<div class="narrator">Вы вежливо отказываетесь. −2 Репутации.</div>`);
+                    setTimeout(() => setChoices([{ tag: '→', text: 'Следующее дело', action: startNewCase }]), 1500);
+                }}
+            ]);
+        }
+
+        // ============================================
+        // COURT PROCEEDINGS
+        // ============================================
+        function startCourtProceedings(c, prepBonus, fee) {
+            state.courtState = { case: c, prepBonus, fee, score: prepBonus, stage: 1, maxStages: 3, log: [] };
+            showCourtStage();
+        }
+
+        function showCourtStage() {
+            const cs = state.courtState;
+            const c = cs.case;
+            const stageNames = ['', 'Прения', 'Допрос свидетеля', 'Реплики'];
+            renderStats();
+
+            if (cs.stage === 1) {
+                setStory(`
+                    <div class="case-tag">${c.type} · Дело №${c.id}</div>
+                    <div class="stage">Стадия ${cs.stage}/3: ${stageNames[1]}</div>
+                    <div class="highlight">${c.name}</div>
+                    <br>
+                    <div class="narrator">Зал суда. Судья открывает заседание. Оппонент — опытный юрист.</div>
+                    <br>
+                    <div class="narrator">«Слово предоставляется представителю истца».</div>
+                `);
+                setChoices([
+                    { tag: 'А', text: 'Сделать упор на письменные доказательства и нормы закона (надёжно)', action: () => resolveCourtStage(cs, 'law') },
+                    { tag: 'Б', text: 'Эмоционально давить на справедливость (рискованно)', action: () => resolveCourtStage(cs, 'emotion') },
+                    { tag: 'В', text: 'Ссылаться на свежую практику Верховного Суда (требует знаний)', action: () => resolveCourtStage(cs, 'practice') }
+                ]);
+            } else if (cs.stage === 2) {
+                setStory(`
+                    <div class="case-tag">${c.type} · Дело №${c.id}</div>
+                    <div class="stage">Стадия ${cs.stage}/3: ${stageNames[2]}</div>
+                    <br>
+                    <div class="narrator">Судья вызывает свидетеля — представителя противоположной стороны. Он путается в показаниях.</div>
+                    <br>
+                    <div class="narrator">«У вас есть вопросы к свидетелю?»</div>
+                `);
+                setChoices([
+                    { tag: 'А', text: 'Уточнить противоречия в его показаниях (спокойно, по фактам)', action: () => resolveCourtStage(cs, 'clarify') },
+                    { tag: 'Б', text: 'Задать каверзный вопрос, чтобы поймать на лжи (рискованно)', action: () => resolveCourtStage(cs, 'trap') },
+                    { tag: 'В', text: 'Спросить о документах, которые он подписывал (проверка знаний)', action: () => resolveCourtStage(cs, 'documents') }
+                ]);
+            } else {
+                setStory(`
+                    <div class="case-tag">${c.type} · Дело №${c.id}</div>
+                    <div class="stage">Стадия ${cs.stage}/3: ${stageNames[3]}</div>
+                    <br>
+                    <div class="narrator">Прения окончены. Судья предлагает сторонам выступить с репликами.</div>
+                    <br>
+                    <div class="narrator">Оппонент уже произнёс речь. Слово — вам.</div>
+                `);
+                setChoices([
+                    { tag: 'А', text: 'Кратко резюмировать ключевые доводы (уверенно)', action: () => resolveCourtStage(cs, 'summary') },
+                    { tag: 'Б', text: 'Ответить на нападки оппонента и указать на его ошибки (агрессивно)', action: () => resolveCourtStage(cs, 'counter') },
+                    { tag: 'В', text: 'Сделать акцент на процессуальных нарушениях (юридически тонко)', action: () => resolveCourtStage(cs, 'procedural') }
+                ]);
+            }
+        }
+
+        function resolveCourtStage(cs, choiceType) {
+            const c = cs.case;
+            const roll = d20();
+            const knowledgeBonus = Math.floor(state.knowledge / 10);
+            const bribeBonus = state.bribeJudge ? 2 : 0;
+            const stressPenalty = state.stress > 60 ? -3 : 0;
+            let stageScore = 0, text = '', stageResult = '';
+
+            if (cs.stage === 1) {
+                if (choiceType === 'law') {
+                    stageScore = 2 + Math.floor(roll / 6) + knowledgeBonus;
+                    stageResult = roll >= 8 ? 'success' : 'failure';
+                    text = roll >= 8 ? 'Вы чётко излагаете правовую позицию. Судья внимательно слушает.' : 'Вы путаетесь в нормах, оппонент ловит на неточности.';
+                } else if (choiceType === 'emotion') {
+                    stageScore = (roll >= 14 ? 5 : -1) + Math.floor(roll / 5);
+                    stageResult = roll >= 14 ? 'success' : 'failure';
+                    text = roll >= 14 ? 'Ваша речь трогает судью. Оппонент нервничает.' : 'Судья хмурится: «Эмоции — не доказательство».';
+                } else {
+                    stageScore = 1 + Math.floor(roll / 4) + knowledgeBonus;
+                    stageResult = (roll + knowledgeBonus) >= 12 ? 'success' : 'failure';
+                    text = (roll + knowledgeBonus) >= 12 ? 'Вы ссылаетесь на свежее постановление Пленума ВС — судья делает пометку.' : 'Судья не впечатлена: «Это не относится к делу».';
+                }
+            } else if (cs.stage === 2) {
+                if (choiceType === 'clarify') {
+                    stageScore = 2 + Math.floor(roll / 5) + knowledgeBonus;
+                    stageResult = roll >= 7 ? 'success' : 'failure';
+                    text = roll >= 7 ? 'Вы спокойно указываете на противоречия. Свидетель нервничает.' : 'Свидетель уходит от ответа.';
+                } else if (choiceType === 'trap') {
+                    stageScore = (roll >= 16 ? 6 : -2) + Math.floor(roll / 6);
+                    stageResult = roll >= 16 ? 'success' : 'failure';
+                    text = roll >= 16 ? 'Свидетель попадается! Он признаёт, что документы подписывал под давлением.' : 'Свидетель не поддаётся, а судья делает замечание.';
+                } else {
+                    stageScore = 1 + Math.floor(roll / 4) + knowledgeBonus;
+                    stageResult = (roll + knowledgeBonus) >= 11 ? 'success' : 'failure';
+                    text = (roll + knowledgeBonus) >= 11 ? 'Вы добиваетесь, чтобы свидетель подтвердил подписание документов.' : 'Свидетель ссылается на забывчивость.';
+                }
+            } else {
+                if (choiceType === 'summary') {
+                    stageScore = 2 + Math.floor(roll / 5) + knowledgeBonus;
+                    stageResult = roll >= 7 ? 'success' : 'failure';
+                    text = roll >= 7 ? 'Вы уверенно резюмируете: все ключевые доводы на вашей стороне.' : 'Резюме получается скомканным.';
+                } else if (choiceType === 'counter') {
+                    stageScore = (roll >= 13 ? 4 : 0) + Math.floor(roll / 5);
+                    stageResult = roll >= 13 ? 'success' : 'failure';
+                    text = roll >= 13 ? 'Вы жёстко отвечаете оппоненту. Судья впечатлена.' : 'Оппонент парирует, судья просит не переходить на личности.';
+                } else {
+                    stageScore = 1 + Math.floor(roll / 4) + knowledgeBonus;
+                    stageResult = (roll + knowledgeBonus) >= 12 ? 'success' : 'failure';
+                    text = (roll + knowledgeBonus) >= 12 ? 'Вы указываете на процессуальные нарушения оппонента. Судья делает пометку.' : 'Судья не находит нарушений.';
+                }
+            }
+
+            stageScore += bribeBonus + stressPenalty;
+            cs.score += Math.max(0, stageScore);
+            cs.log.push({ stage: cs.stage, choiceType, roll, stageScore: Math.max(0, stageScore), stageResult });
+
+            setStory(`
+                <div class="case-tag">${c.type} · Дело №${c.id}</div>
+                <div class="stage">Стадия ${cs.stage}/3</div>
+                <br>
+                <div class="${stageResult === 'success' ? 'success' : 'failure'}">${stageResult === 'success' ? '✔' : '✖'} ${text}</div>
+                <br>
+                <div class="narrator">Бросок: ${roll} · Подготовка: ${cs.prepBonus > 0 ? '+' + cs.prepBonus : '0'} · Знания: +${knowledgeBonus} ${bribeBonus > 0 ? '· Связи: +' + bribeBonus : ''} ${stressPenalty < 0 ? '· Стресс: ' + stressPenalty : ''} · Баллов: <span class="highlight">${Math.max(0, stageScore)}</span></div>
+                <br>
+                <div class="narrator">Общий счёт: <span class="highlight">${cs.score}</span> / нужно ${c.difficulty + 3}</div>
+            `);
+
+            applyEffects({ stress: 3, energy: -3 });
+            renderStats();
+
+            setTimeout(() => {
+                if (cs.stage < cs.maxStages) {
+                    cs.stage++;
+                    setChoices([{ tag: '→', text: `Перейти к стадии ${cs.stage}: ${stageNames[cs.stage]}`, action: showCourtStage }]);
+                } else {
+                    setChoices([{ tag: '⚖️', text: 'Выслушать решение суда', action: () => resolveVerdict(cs) }]);
+                }
+            }, 1800);
+        }
+
+        function resolveVerdict(cs) {
+            const c = cs.case;
+            const threshold = c.difficulty + 3;
+            const won = cs.score >= threshold;
+            c.resolved = true;
+
+            if (won) {
+                state.casesWon++;
+                applyEffects({ money: cs.fee, reputation: 5 + Math.floor(c.difficulty / 4), stress: -5, knowledge: 2 });
+                renderStats();
+                setStory(`
+                    <div class="case-tag">${c.type} · Дело №${c.id}</div>
+                    <div class="success" style="font-size:1.15em;">🏆 РЕШЕНИЕ В ВАШУ ПОЛЬЗУ!</div>
+                    <br>
+                    <div class="narrator">Судья оглашает решение: иск удовлетворён. Счёт <span class="highlight">${cs.score}</span> ≥ ${threshold}.</div>
+                    <br>
+                    <div class="narrator">Гонорар: <span class="highlight">${cs.fee.toLocaleString('ru-RU')} ₽</span>. Репутация +${5 + Math.floor(c.difficulty / 4)}.</div>
+                `);
+            } else {
+                state.casesLost++;
+                applyEffects({ reputation: -3, stress: 10, knowledge: 3 });
+                renderStats();
+                setStory(`
+                    <div class="case-tag">${c.type} · Дело №${c.id}</div>
+                    <div class="failure" style="font-size:1.15em;">✖ В ИСКЕ ОТКАЗАНО</div>
+                    <br>
+                    <div class="narrator">Счёт <span class="highlight">${cs.score}</span> < ${threshold}. −3 Репутации, +10 Стресса, +3 Знаний.</div>
+                `);
+            }
+
+            if (state.money < -50000) { setTimeout(() => gameOver('bankrupt'), 2200); return; }
+            if (state.stress >= 100) { setTimeout(() => gameOver('burnout'), 2200); return; }
+
+            setTimeout(() => {
+                setChoices([
+                    { tag: '→', text: 'Следующее дело', action: startNewCase },
+                    { tag: '🛋', text: 'Отдохнуть (восстановить энергию, снизить стресс)', action: () => {
+                        applyEffects({ energy: 25, stress: -20, money: -3000 });
+                        renderStats();
+                        setStory(`<div class="narrator">Вы берёте паузу. Энергия +25, стресс −20, −3 000 ₽.</div>`);
+                        setTimeout(() => setChoices([{ tag: '→', text: 'Вернуться к делам', action: startNewCase }]), 1500);
+                    }}
+                ]);
+            }, 2400);
+        }
+
+        // ============================================
+        // GAME OVER
+        // ============================================
+        function gameOver(reason) {
+            state.gameOver = true;
+            state.chapter = 7;
+            renderStats();
+            const title = reason === 'bankrupt' ? '📉 БАНКРОТСТВО' : '🔥 ВЫГОРАНИЕ';
+            const text = reason === 'bankrupt' ? 'Долги превысили 50 000 ₽. Офис закрыт. Но опыт остался.' : 'Стресс достиг 100. Вы больше не можете работать.';
+            setStory(`
+                <div style="text-align:center;font-size:1.4em;color:#e74c3c;margin-bottom:15px;">${title}</div>
+                <div class="narrator">${text}</div>
+                <br>
+                <div style="text-align:center;font-size:0.9em;color:#8a8aad;">🏆 Побед: ${state.casesWon} · ✖ Поражений: ${state.casesLost} · 💰 ${state.money.toLocaleString('ru-RU')} ₽ · ⭐ ${state.reputation}/100</div>
+            `);
+            setChoices([]);
+            addRestartButton();
+            footer.textContent = 'Игра окончена · Попробуйте снова!';
+        }
+
+        // ============================================
+        // INTRO CHAPTERS
+        // ============================================
+        function startChapter1() {
+            state.chapter = 1;
+            renderStats();
+            setStory(`
+                <div class="narrator">Понедельник, 9:00. Офис на Курортном проспекте. Пахнет кофе и старой мебелью.</div>
+                <br>
+                <div class="narrator">Звонок. Галина Петровна, 72 года: УК содрала 28 тысяч за ремонт, которого не было.</div>
+                <br>
+                <div class="narrator">Что ответить?</div>
+            `);
+            setChoices([
+                { tag: 'А', text: 'Взять оба дела и запросить 15 000 ₽.', action: () => {
+                    state.case1 = 'both';
+                    applyEffects({ money: 15000, reputation: 5, energy: -10 });
+                    renderStats();
+                    setStory(`<div class="success">✔ Вы берёте оба дела.</div>`);
+                    setTimeout(startChapter2, 1200);
+                }},
+                { tag: 'Б', text: 'Взять только дело против УК за 10 000 ₽.', action: () => {
+                    state.case1 = 'uk';
+                    applyEffects({ money: 10000, reputation: 2, energy: -5 });
+                    renderStats();
+                    setStory(`<div class="narrator">Вы сосредоточитесь на деле против УК.</div>`);
+                    setTimeout(startChapter2, 1200);
+                }},
+                { tag: 'В', text: 'Отказаться — вы по арбитражу.', action: () => {
+                    state.case1 = 'declined';
+                    applyEffects({ reputation: -3 });
+                    renderStats();
+                    setStory(`<div class="failure">✖ Галина Петровна расстроена.</div>`);
+                    setTimeout(() => startChapter2(true), 2000);
+                }}
+            ]);
+        }
+
+        function startChapter2(forced = false) {
+            state.chapter = 2;
+            renderStats();
+            if (state.case1 === 'declined') {
+                setStory(`<div class="narrator">Проходит неделя. Вдруг — звонок: ИП Смирнов, спор на 400 000 ₽ в арбитраже.</div>`);
+                setTimeout(() => {
+                    state.currentCase = { id: 0, type: 'Арбитражный', name: 'Спор с поставщиком рыбы', description: 'ИП Смирнов требует взыскать убытки за испорченную рыбу.', difficulty: 14, amount: 400000, resolved: false };
+                    startCourtProceedings(state.currentCase, 0, 60000);
+                }, 1500);
+                return;
+            }
+            setStory(`<div class="narrator">Вечер. Вы за ноутбуком. Дело против УК «СочиЖилСервис».</div><br><div class="narrator">Как готовиться?</div>`);
+            setChoices([
+                { tag: 'А', text: 'Изучить практику по ст. 1102 ГК (потратить энергию, получить бонус).', action: () => {
+                    applyEffects({ knowledge: 10, energy: -15, money: -500, stress: 5 });
+                    renderStats();
+                    setStory(`<div class="success">✔ К полуночи у вас готова чёткая позиция. +10 Знаний.</div>`);
+                    setTimeout(startChapter3, 1200);
+                }},
+                { tag: 'Б', text: 'Пойти в УК и попытаться решить миром.', action: () => {
+                    const roll = d20();
+                    if (state.knowledge + roll >= 20) {
+                        applyEffects({ money: 20000, reputation: 10, energy: -10, stress: 10 });
+                        renderStats();
+                        setStory(`<div class="success">✔ УК возвращает 20 000 ₽ без суда!</div>`);
+                    } else {
+                        applyEffects({ energy: -15, stress: 15 });
+                        renderStats();
+                        setStory(`<div class="failure">✖ В УК вас выпроваживают. Придётся судиться.</div>`);
+                    }
+                    setTimeout(startChapter3, 1500);
+                }},
+                { tag: 'В', text: 'Позвонить знакомому судье (−5 000 ₽, +2 к удаче).', action: () => {
+                    state.bribeJudge = true;
+                    applyEffects({ money: -5000, stress: 5 });
+                    renderStats();
+                    setStory(`<div class="narrator">Вы звоните знакомому судье. «Коньяк» передан. +2 к удаче.</div>`);
+                    setTimeout(startChapter3, 1200);
+                }}
+            ]);
+        }
+
+        function startChapter3() {
+            state.chapter = 3;
+            renderStats();
+            setStory(`<div class="narrator">Зал №4, Центральный районный суд г. Сочи. Дело против УК.</div><br><div class="narrator">Это ваш первый процесс. Как вести себя?</div>`);
+            const luckBonus = state.bribeJudge ? 3 : 0;
+            setChoices([
+                { tag: 'А', text: 'Требовать почерковедческую экспертизу протокола.', action: () => {
+                    const roll = d20();
+                    if (state.knowledge + roll + luckBonus >= 15) {
+                        state.hasExpertise = true;
+                        applyEffects({ stress: 10, energy: -5 });
+                        renderStats();
+                        setStory(`<div class="success">✔ Экспертиза назначена!</div>`);
+                    } else {
+                        applyEffects({ stress: 15 });
+                        renderStats();
+                        setStory(`<div class="failure">✖ Ходатайство отклонено.</div>`);
+                    }
+                    setTimeout(startChapter4, 1500);
+                }},
+                { tag: 'Б', text: 'Бить по ст. 1102 ГК — неосновательное обогащение.', action: () => {
+                    const roll = d20();
+                    if (state.knowledge + roll + luckBonus >= 12) {
+                        applyEffects({ stress: -5, energy: -5 });
+                        renderStats();
+                        setStory(`<div class="success">✔ Позиция убедительна!</div>`);
+                    } else {
+                        applyEffects({ stress: 15 });
+                        renderStats();
+                        setStory(`<div class="failure">✖ Судья не впечатлена.</div>`);
+                    }
+                    setTimeout(startChapter4, 1500);
+                }}
+            ]);
+        }
+
+        function startChapter4() {
+            state.chapter = 4;
+            renderStats();
+            setStory(`
+                <div class="narrator">Прошло 3 месяца. Вы уже известны в Сочи.</div>
+                <br>
+                <div class="narrator">Теперь у вас есть доступ к <span class="highlight">200 искам</span> — гражданским и арбитражным. Каждый проходит через полноценное судебное разбирательство.</div>
+                <br>
+                <div class="narrator">Пора открыть портфель дел.</div>
+            `);
+            setChoices([{ tag: '→', text: '🎲 Открыть портфель из 200 исков', action: () => {
+                state.casePool = generateCases();
+                startNewCase();
+            }}]);
+        }
+
+        // ============================================
+        // INIT WITH AUTOLOAD
+        // ============================================
+        function init() {
+            const loaded = loadGame();
+            if (loaded) {
+                renderStats();
+                showSaveIndicator('📂 Прогресс загружен');
+                if (state.gameOver) {
+                    gameOver(state.stress >= 100 ? 'burnout' : 'bankrupt');
+                } else if (state.chapter >= 6) {
+                    showResumeMenu('📂 Прогресс загружен. Вы продолжаете с того же места.');
+                } else if (state.chapter >= 4) {
+                    startChapter4();
+                } else if (state.chapter === 3) {
+                    startChapter3();
+                } else if (state.chapter === 2) {
+                    startChapter2();
+                } else {
+                    startChapter1();
+                }
+            } else {
+                state.casePool = generateCases();
+                renderStats();
+                startChapter1();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
