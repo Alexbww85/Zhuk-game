@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#c9a84c">
-<title>⚖️ Жук: Адвокат из Сочи v5</title>
+<title>⚖️ Жук: Адвокат из Сочи v6</title>
 <link rel="manifest" id="manifestLink">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -34,6 +34,8 @@ h1{font-size:1.5em;text-align:center;color:#f0d878;letter-spacing:1.5px;margin-b
 .story-box .stage{display:inline-block;background:#2a1a3a;color:#d8a8ea;font-size:.78em;padding:2px 10px;border-radius:4px;margin-bottom:8px;margin-left:6px}
 .story-box .trap{display:inline-block;background:#4a1a1a;color:#e74c3c;font-size:.78em;padding:2px 10px;border-radius:4px;margin:4px 0;border:1px solid #e74c3c}
 .story-box .inst{display:inline-block;background:#1a2a4a;color:#a8d8ea;font-size:.78em;padding:2px 10px;border-radius:4px;margin:4px 0;border:1px solid #a8d8ea}
+.story-box .score-line{display:block;margin-top:8px;padding:6px 10px;background:#1a2a1a;border-radius:6px;font-size:.85em;color:#a8eaa8}
+.story-box .score-line.bad{background:#2a1a1a;color:#eaa8a8}
 .choices{display:flex;flex-direction:column;gap:8px;animation:fadeIn .6s ease}
 .choice-btn{background:#22223a;border:1px solid #3a3a5c;border-radius:10px;padding:12px 16px;color:#d0d0e0;font-family:Georgia,serif;font-size:.93em;text-align:left;cursor:pointer;transition:all .25s;position:relative;touch-action:manipulation}
 .choice-btn:hover{background:#2a2a48;border-color:#c9a84c;color:#f0d878;transform:translateX(3px)}
@@ -42,9 +44,12 @@ h1{font-size:1.5em;text-align:center;color:#f0d878;letter-spacing:1.5px;margin-b
 .choice-btn.pressed::after{content:'✔';position:absolute;right:14px;color:#2ecc71;font-weight:bold}
 .choice-btn.optional{border-color:#a8d8ea;background:#1a2a3a}
 .choice-btn.optional:hover{border-color:#d8a8ea;background:#2a1a3a}
+.choice-btn.finish-btn{background:#2a2a48;border-color:#c9a84c;color:#f0d878;font-weight:bold;margin-top:4px}
+.choice-btn.finish-btn:hover{background:#3a3a5c}
 .choice-btn .choice-tag{display:inline-block;background:#2a2a48;color:#8a8aad;font-size:.72em;padding:1px 7px;border-radius:4px;margin-right:7px;font-family:'Courier New',monospace}
 .choice-btn.pressed .choice-tag{background:#1a3a1a;color:#2ecc71}
 .choice-btn.optional .choice-tag{background:#1a2a4a;color:#a8d8ea}
+.choice-btn.finish-btn .choice-tag{background:#3a3a1a;color:#f0d878}
 .action-btn{background:linear-gradient(135deg,#c9a84c,#a88a3a);border:none;border-radius:8px;padding:11px 24px;color:#1a1a2e;font-family:Georgia,serif;font-size:.95em;font-weight:bold;cursor:pointer;transition:all .25s;margin:4px;touch-action:manipulation}
 .action-btn:hover{background:linear-gradient(135deg,#f0d878,#c9a84c);transform:translateY(-2px)}
 .action-btn:active{transform:scale(.97)}
@@ -66,7 +71,7 @@ h1{font-size:1.5em;text-align:center;color:#f0d878;letter-spacing:1.5px;margin-b
 <div class="game-container" id="game">
 <div class="save-indicator" id="saveIndicator">💾 Сохранено</div>
 <h1>⚖️ ЖУК: АДВОКАТ ИЗ СОЧИ</h1>
-<div class="subtitle">Александр Николаевич Жук, 41 год · ЧГА · Сочи · 200 исков · v5</div>
+<div class="subtitle">Александр Николаевич Жук, 41 год · ЧГА · Сочи · 200 исков · v6</div>
 <div class="offline-banner" id="offlineBanner">📴 Офлайн-режим</div>
 <div class="install-banner" id="installBanner"><span>📲 Установить как приложение?</span><button id="installBtn">Установить</button></div>
 <div class="stats-bar" id="statsBar"></div>
@@ -85,7 +90,7 @@ h1{font-size:1.5em;text-align:center;color:#f0d878;letter-spacing:1.5px;margin-b
 // ============ PWA ============
 const manifestData={name:'Жук: Адвокат из Сочи',short_name:'Жук',description:'Текстовая RPG юриста',start_url:'.',scope:'.',display:'standalone',orientation:'portrait',background_color:'#1a1a2e',theme_color:'#c9a84c',lang:'ru',icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%E2%9A%96%EF%B8%8F%3C/text%3E%3C/svg%3E",sizes:'192x192',type:'image/svg+xml',purpose:'any maskable'},{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='64' fill='%231a1a2e'/%3E%3Ctext x='256' y='350' font-size='280' text-anchor='middle'%3E%E2%9A%96%EF%B8%8F%3C/text%3E%3C/svg%3E",sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
 try{const mb=new Blob([JSON.stringify(manifestData)],{type:'application/manifest+json'});document.getElementById('manifestLink').href=URL.createObjectURL(mb)}catch(e){}
-const swCode=`const C='zhuk-v5';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html']).catch(()=>{})).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(r&&r.status===200){const cl=r.clone();caches.open(C).then(ca=>ca.put(e.request,cl))}return r}).catch(()=>c)))})};`;
+const swCode=`const C='zhuk-v6';self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html']).catch(()=>{})).then(()=>self.skipWaiting()))});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(r&&r.status===200){const cl=r.clone();caches.open(C).then(ca=>ca.put(e.request,cl))}return r}).catch(()=>c)))})};`;
 if('serviceWorker'in navigator){try{const sb=new Blob([swCode],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(sb),{scope:'./'}).catch(e=>console.warn('SW:',e))}catch(e){}}
 let deferredPrompt=null;const installBanner=document.getElementById('installBanner'),installBtn=document.getElementById('installBtn');
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBanner.classList.add('show')});
@@ -95,7 +100,7 @@ const offlineBanner=document.getElementById('offlineBanner');function updOnline(
 
 // ============ STATE ============
 const state={money:30000,reputation:10,energy:100,knowledge:20,stress:0,day:0,chapter:1,case1:null,hasExpertise:false,bribeJudge:false,casesWon:0,casesLost:0,casePool:[],currentCase:null,courtState:null,gameOver:false};
-const SAVE_KEY='zhuk_save_v5';
+const SAVE_KEY='zhuk_save_v6';
 const DAILY_COST=1350;
 const FEE_RATE=0.075;
 
@@ -128,7 +133,7 @@ statsBar.innerHTML=items.map(it=>{const p=Math.min(100,(it.raw/it.max)*100);cons
 saveGame();
 }
 function setStory(h){storyBox.innerHTML=h;storyBox.style.animation='none';void storyBox.offsetWidth;storyBox.style.animation='fadeIn .5s ease'}
-function setChoices(ch){choicesDiv.innerHTML='';ch.forEach(c=>{const b=document.createElement('button');b.className='choice-btn'+(c.optional?' optional':'');b.innerHTML=`<span class="choice-tag">${c.tag}</span>${c.text}`;b.onclick=()=>c.action();choicesDiv.appendChild(b)});choicesDiv.style.animation='none';void choicesDiv.offsetWidth;choicesDiv.style.animation='fadeIn .6s ease'}
+function setChoices(ch){choicesDiv.innerHTML='';ch.forEach(c=>{const b=document.createElement('button');b.className='choice-btn'+(c.optional?' optional':'')+(c.finish?' finish-btn':'');b.innerHTML=`<span class="choice-tag">${c.tag}</span>${c.text}`;b.onclick=()=>c.action();choicesDiv.appendChild(b)});choicesDiv.style.animation='none';void choicesDiv.offsetWidth;choicesDiv.style.animation='fadeIn .6s ease'}
 function addRestartButton(){const b=document.createElement('button');b.className='action-btn';b.textContent='🔄 Начать заново';b.onclick=()=>{clearSave();location.reload()};choicesDiv.appendChild(b)}
 
 // ============ 200 CASES ============
@@ -341,12 +346,12 @@ setStory(`
 `);
 setChoices([
 {tag:'1',text:'Ничего не делать — сразу в суд (быстро, но без бонусов, +5 стресса)',action:()=>{passDays(3);applyEffects({stress:5});startCourtPrep(c,0,0,'no-prep')}},
-{tag:'2',text:'Прочитать документы клиента (2 дня, +2 знания, бонус +1)',action:()=>{passDays(2);applyEffects({knowledge:2,energy:-5});startCourtPrep(c,1,0,'read')}},
-{tag:'3',text:'Изучить судебную практику (5 дней, +5 знаний, бонус +2)',action:()=>{passDays(5);applyEffects({knowledge:5,energy:-10});startCourtPrep(c,2,0,'practice')}},
-{tag:'4',text:'Проверить подсудность и сроки (3 дня, +3 знания, бонус +2)',action:()=>{passDays(3);applyEffects({knowledge:3,energy:-5});startCourtPrep(c,2,0,'jurisdiction')}},
-{tag:'5',text:'Собрать доказательства и свидетелей (7 дней, бонус +3, −10 000 ₽)',action:()=>{passDays(7);applyEffects({knowledge:4,energy:-15,money:-10000,stress:5});startCourtPrep(c,3,0,'evidence')}},
-{tag:'6',text:'Заказать экспертизу (−25 000 ₽, 10 дней, бонус +4)',action:()=>{passDays(10);applyEffects({knowledge:5,energy:-10,money:-25000,stress:10});startCourtPrep(c,4,0,'expertise')}},
-{tag:'7',text:'Полная подготовка: практика + экспертиза + свидетели (15 дней, −35 000 ₽, бонус +5, стресс +15)',action:()=>{passDays(15);applyEffects({knowledge:8,energy:-20,money:-35000,stress:15});startCourtPrep(c,5,0,'full')}}
+{tag:'2',text:'Прочитать документы клиента (2 дня, +2 знания, бонус +2)',action:()=>{passDays(2);applyEffects({knowledge:2,energy:-5});startCourtPrep(c,2,0,'read')}},
+{tag:'3',text:'Изучить судебную практику (5 дней, +5 знаний, бонус +4)',action:()=>{passDays(5);applyEffects({knowledge:5,energy:-10});startCourtPrep(c,4,0,'practice')}},
+{tag:'4',text:'Проверить подсудность и сроки (3 дня, +3 знания, бонус +4)',action:()=>{passDays(3);applyEffects({knowledge:3,energy:-5});startCourtPrep(c,4,0,'jurisdiction')}},
+{tag:'5',text:'Собрать доказательства и свидетелей (7 дней, бонус +6, −10 000 ₽)',action:()=>{passDays(7);applyEffects({knowledge:4,energy:-15,money:-10000,stress:5});startCourtPrep(c,6,0,'evidence')}},
+{tag:'6',text:'Заказать экспертизу (−25 000 ₽, 10 дней, бонус +8)',action:()=>{passDays(10);applyEffects({knowledge:5,energy:-10,money:-25000,stress:10});startCourtPrep(c,8,0,'expertise')}},
+{tag:'7',text:'Полная подготовка: практика + экспертиза + свидетели (15 дней, −35 000 ₽, бонус +10, стресс +15)',action:()=>{passDays(15);applyEffects({knowledge:8,energy:-20,money:-35000,stress:15});startCourtPrep(c,10,0,'full')}}
 ])}
 
 // 8 процессуальных стадий
@@ -388,157 +393,35 @@ setChoices([
 return;
 }
 
-if(cs.stage===0){
-setStory(`
-<div class="case-tag">${c.type} · Дело №${c.id}</div>
-<div class="stage">Стадия 1/8: ${st.name}</div>
-<div class="highlight">${c.name}</div>
-<br>
-<div class="narrator">${c.description}</div>
-<br>
-<div class="narrator"><b>Нажмите все три обязательных варианта по очереди.</b> Каждый вариант — отдельное процессуальное действие.</div>
-`);
-setChoices([
-{tag:'А',text:'Направить претензию (обязательно для большинства споров — ст. 132 ГПК / ст. 4 АПК)',action:()=>stageAction(cs,'pretenziya','A')},
-{tag:'Б',text:'Проверить сроки и подсудность',action:()=>stageAction(cs,'pretenziya','B')},
-{tag:'В',text:'Собрать документы для претензии',action:()=>stageAction(cs,'pretenziya','C')}
-]);
-} else if(cs.stage===1){
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 2/8: ${st.name}</div><br><div class="narrator">Составляем исковое заявление. Нужно учесть госпошлину, подсудность, приложения.</div><br><div class="law">Ст. 131-132 ГПК РФ / ст. 125-126 АПК РФ — требования к иску</div>`);
-setChoices([
-{tag:'А',text:'Рассчитать госпошлину (ст. 333.19 НК РФ)',action:()=>stageAction(cs,'isk','A')},
-{tag:'Б',text:'Проверить подсудность (районный/мировой/арбитраж)',action:()=>stageAction(cs,'isk','B')},
-{tag:'В',text:'Составить приложения к иску',action:()=>stageAction(cs,'isk','C')}
-]);
-} else if(cs.stage===2){
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 3/8: ${st.name}</div><br><div class="narrator">Предварительное заседание. Судья уточняет позиции, назначает экспертизы.</div><br><div class="inst">🆕 НОВОЕ: Обеспечительные меры (ст. 139-140 ГПК / ст. 90-91 АПК)</div><br><div class="narrator">Можно нажать <b>дополнительную</b> кнопку — обеспечительные меры. Это арест имущества ответчика, чтобы он не вывел активы.</div>`);
-setChoices([
-{tag:'А',text:'Заявить ходатайство о назначении экспертизы',action:()=>stageAction(cs,'prelim','A')},
-{tag:'Б',text:'Уточнить исковые требования',action:()=>stageAction(cs,'prelim','B')},
-{tag:'В',text:'Заявить о вызове свидетелей',action:()=>stageAction(cs,'prelim','C')},
-{tag:'🛡',text:'ДОПОЛНИТЕЛЬНО: Обеспечительные меры — арест имущества ответчика (−15 000 ₽, 5 дней)',optional:true,action:()=>optionalInterim(cs)}
-]);
-} else if(cs.stage===3){
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 4/8: ${st.name}</div><br><div class="narrator">Ходатайства и заявления. Можно истребовать доказательства, назначить экспертизу, привлечь третьих лиц.</div>`);
-setChoices([
-{tag:'А',text:'Истребовать доказательства у оппонента (ст. 57 ГПК / ст. 66 АПК)',action:()=>stageAction(cs,'motions','A')},
-{tag:'Б',text:'Привлечь третье лицо',action:()=>stageAction(cs,'motions','B')},
-{tag:'В',text:'Заявить о фальсификации доказательств (ст. 186 ГПК)',action:()=>stageAction(cs,'motions','C')}
-]);
-} else if(cs.stage===4){
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 5/8: ${st.name}</div><br><div class="narrator">Основное заседание. Прения по существу спора.</div><br><div class="inst">🆕 НОВОЕ: Встречный иск (ст. 137-138 ГПК / ст. 132 АПК)</div><br><div class="narrator">Можно нажать <b>дополнительную</b> кнопку — встречный иск. Рискованно: если выиграете — счёт удвоится, если проиграете — потеряете всё.</div>`);
-setChoices([
-{tag:'А',text:'Изложить правовую позицию со ссылками на нормы',action:()=>stageAction(cs,'main','A')},
-{tag:'Б',text:'Ответить на доводы оппонента',action:()=>stageAction(cs,'main','B')},
-{tag:'В',text:'Заявить о пропуске срока оппонентом (если применимо)',action:()=>stageAction(cs,'main','C')},
-{tag:'⚔',text:'ДОПОЛНИТЕЛЬНО: Встречный иск — рискованно, но счёт может удвоиться (−20 000 ₽, 10 дней)',optional:true,action:()=>optionalCounterclaim(cs)}
-]);
-} else if(cs.stage===5){
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 6/8: ${st.name}</div><br><div class="narrator">Исследование доказательств: допрос свидетелей, оглашение документов, заключение эксперта.</div>`);
-setChoices([
-{tag:'А',text:'Допросить свидетеля (уточнить противоречия)',action:()=>stageAction(cs,'evidence','A')},
-{tag:'Б',text:'Огласить письменные доказательства',action:()=>stageAction(cs,'evidence','B')},
-{tag:'В',text:'Задать вопросы эксперту',action:()=>stageAction(cs,'evidence','C')}
-]);
-} else if(cs.stage===6){
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 7/8: ${st.name}</div><br><div class="narrator">Прения сторон. Финальные речи.</div>`);
-setChoices([
-{tag:'А',text:'Резюмировать ключевые доводы',action:()=>stageAction(cs,'debates','A')},
-{tag:'Б',text:'Указать на процессуальные нарушения',action:()=>stageAction(cs,'debates','B')},
-{tag:'В',text:'Ответить на реплику оппонента',action:()=>stageAction(cs,'debates','C')}
-]);
-} else {
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия 8/8: ${st.name}</div><br><div class="narrator">Суд удаляется в совещательную комнату. Ждём решения.</div>`);
-setChoices([{tag:'⚖️',text:'Выслушать решение суда',action:()=>resolveVerdict(cs)}]);
-}
-}
-
-// ==== ОБЕСПЕЧИТЕЛЬНЫЕ МЕРЫ (доп. кнопка) ====
-function optionalInterim(cs){
-const c=cs.case;
-passDays(5);applyEffects({money:-15000,stress:5,energy:-5});renderStats();
-const roll=d20();
-const success=roll+Math.floor(state.knowledge/10)>=10;
-if(success){cs.interimMeasure=true;cs.score+=3;setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">🛡 Обеспечительные меры</div><br><div class="success">✔ Суд удовлетворил ходатайство! Имущество ответчика арестовано. +3 балла к счёту, оппонент не сможет вывести активы.</div><br><div class="narrator">Бросок: ${roll} · Счёт: <span class="highlight">${cs.score}</span></div>`)}
-else{setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">🛡 Обеспечительные меры</div><br><div class="failure">✖ Суд отказал в обеспечительных мерах. Деньги и дни потрачены зря.</div><br><div class="narrator">Бросок: ${roll}</div>`)}
-setTimeout(()=>showStageWithProgress(cs),1500);
-}
-
-// ==== ВСТРЕЧНЫЙ ИСК (доп. кнопка) ====
-function optionalCounterclaim(cs){
-const c=cs.case;
-passDays(10);applyEffects({money:-20000,stress:15,energy:-10});renderStats();
-const roll=d20();
-const success=roll+Math.floor(state.knowledge/10)>=12;
-if(success){cs.counterclaim=true;cs.score+=5;setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">⚔ Встречный иск</div><br><div class="success">✔ Суд принял встречный иск! Вы перехватили инициативу. +5 баллов, счёт может удвоиться.</div><br><div class="narrator">Бросок: ${roll} · Счёт: <span class="highlight">${cs.score}</span></div>`)}
-else{cs.score=Math.max(0,cs.score-3);setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">⚔ Встречный иск</div><br><div class="failure">✖ Суд вернул встречный иск (не соблюдены условия ст. 138 ГПК). −3 балла, деньги потрачены.</div><br><div class="narrator">Бросок: ${roll} · Счёт: <span class="highlight">${cs.score}</span></div>`)}
-setTimeout(()=>showStageWithProgress(cs),1500);
-}
-
-function stageAction(cs,stageKey,letter){
-const c=cs.case;
-const roll=d20();
-const knowledgeBonus=Math.floor(state.knowledge/10);
-const bribeBonus=state.bribeJudge?2:0;
-const stressPenalty=state.stress>60?-3:0;
-const trapPenalty=(c.trap==='srok'&&stageKey==='pretenziya')?3:0;
-let score=0,text='',result='success';
-
-if(stageKey==='pretenziya'){
-if(letter==='A'){score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Претензия направлена надлежащим образом, срок соблюдён.':'Претензия направлена с нарушениями (не тот адрес/форма).'}
-else if(letter==='B'){score=1+Math.floor(roll/4)+knowledgeBonus;result=(roll+knowledgeBonus)>=10?'success':'failure';text=(roll+knowledgeBonus)>=10?'Сроки и подсудность проверены — всё в порядке.':'Вы пропустили срок / ошиблись с подсудностью.'}
-else{score=1+Math.floor(roll/6)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Документы собраны, приложения готовы.':'Не хватает документов для претензии.'}
-} else if(stageKey==='isk'){
-if(letter==='A'){score=2+Math.floor(roll/6)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Госпошлина рассчитана верно (ст. 333.19 НК).':'Госпошлина рассчитана с ошибкой — иск могут оставить без движения.'}
-else if(letter==='B'){score=1+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Подсудность определена верно.':'Подсудность определена неверно — иск вернут.'}
-else{score=1+Math.floor(roll/6)+knowledgeBonus;result=roll>=6?'success':'failure';text=roll>=6?'Приложения соответствуют ст. 132 ГПК.':'Приложения неполные.'}
-} else if(stageKey==='prelim'){
-if(letter==='A'){score=3+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Экспертиза назначена — это усилит позицию.':'Суд отказал в экспертизе.'}
-else if(letter==='B'){score=1+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Требования уточнены.':'Уточнения отклонены.'}
-else{score=1+Math.floor(roll/6)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Свидетели вызваны.':'Суд отказал в вызове свидетелей.'}
-} else if(stageKey==='motions'){
-if(letter==='A'){score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Доказательства истребованы.':'Суд отказал в истребовании.'}
-else if(letter==='B'){score=1+Math.floor(roll/6)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Третье лицо привлечено.':'Суд отказал в привлечении.'}
-else{score=(roll>=15?4:-1)+Math.floor(roll/6);result=roll>=15?'success':'failure';text=roll>=15?'Заявление о фальсификации удовлетворено — оппонент в шоке.':'Суд отклонил заявление — риск негативных последствий.'}
-} else if(stageKey==='main'){
-if(letter==='A'){score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Позиция изложена чётко.':'Позиция сбивчива.'}
-else if(letter==='B'){score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Вы парировали доводы оппонента.':'Оппонент переиграл вас.'}
-else{score=(c.trap==='srok'?5:1)+Math.floor(roll/5);result=c.trap==='srok'&&roll>=8?'success':'failure';text=c.trap==='srok'&&roll>=8?'Вы заявили о пропуске срока — суд может отказать оппоненту!':'Заявление о сроке не сработало.'}
-} else if(stageKey==='evidence'){
-if(letter==='A'){score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Свидетель путается — вы поймали противоречия.':'Свидетель даёт чёткие показания против вас.'}
-else if(letter==='B'){score=1+Math.floor(roll/6)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Документы оглашены, суд принял.':'Документы признаны недопустимыми.'}
-else{score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Эксперт подтвердил вашу позицию.':'Эксперт дал неоднозначный ответ.'}
-} else if(stageKey==='debates'){
-if(letter==='A'){score=2+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Резюме убедительное.':'Резюме скомканное.'}
-else if(letter==='B'){score=1+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Нарушения указаны — суд зафиксировал.':'Суд не нашёл нарушений.'}
-else{score=1+Math.floor(roll/6)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Реплика сработала.':'Реплика не удалась.'}
-}
-
-score+=bribeBonus+stressPenalty-trapPenalty;
-cs.score+=Math.max(0,score);
-cs.log.push({stage:cs.stage,stageKey,letter,roll,score:Math.max(0,score),result});
-
-const stName=STAGES[cs.stage].name;
-setStory(`
-<div class="case-tag">${c.type} · Дело №${c.id}</div>
-<div class="stage">Стадия ${cs.stage+1}/8: ${stName}</div>
-<br>
-<div class="${result==='success'?'success':'failure'}">${result==='success'?'✔':'✖'} ${text}</div>
-<br>
-<div class="narrator">Бросок: ${roll} · Знания: +${knowledgeBonus} · Баллов: <span class="highlight">${Math.max(0,score)}</span> · Общий счёт: <span class="highlight">${cs.score}</span></div>
-`);
-applyEffects({stress:2,energy:-2});
-renderStats();
-setTimeout(()=>showStageWithProgress(cs),1200);
-}
-
-function showStageWithProgress(cs){
-const c=cs.case;const st=STAGES[cs.stage];
 const pressed=cs.log.filter(l=>l.stage===cs.stage).map(l=>l.letter);
-renderStats();
+const anyPressed=pressed.length>0;
 
-if(pressed.length>=3){
-setChoices([{tag:'→',text:`Все действия выполнены. Перейти к стадии ${cs.stage+2}/8: ${STAGES[cs.stage+1].name}`,action:()=>{cs.stage++;showStage()}}]);
+let stageHtml=`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="stage">Стадия ${cs.stage+1}/8: ${st.name}</div><div class="highlight">${c.name}</div><br>`;
+
+if(cs.stage===0){
+stageHtml+=`<div class="narrator">${c.description}</div><br><div class="narrator"><b>Можно нажать 1, 2 или 3 действия — необязательно все.</b> Каждое действие даёт баллы, но ошибка отнимает их. <b>Кнопка «Завершить стадию» появится сразу после первого действия.</b></div>`;
+} else if(cs.stage===1){
+stageHtml+=`<div class="narrator">Составляем исковое заявление. Нужно учесть госпошлину, подсудность, приложения.</div><br><div class="law">Ст. 131-132 ГПК РФ / ст. 125-126 АПК РФ — требования к иску</div>`;
+} else if(cs.stage===2){
+stageHtml+=`<div class="narrator">Предварительное заседание. Судья уточняет позиции, назначает экспертизы.</div><br><div class="inst">🆕 Обеспечительные меры — дополнительное действие (ст. 139-140 ГПК / ст. 90-91 АПК)</div>`;
+} else if(cs.stage===3){
+stageHtml+=`<div class="narrator">Ходатайства и заявления. Можно истребовать доказательства, назначить экспертизу, привлечь третьих лиц.</div>`;
+} else if(cs.stage===4){
+stageHtml+=`<div class="narrator">Основное заседание. Прения по существу спора.</div><br><div class="inst">🆕 Встречный иск — дополнительное действие (ст. 137-138 ГПК / ст. 132 АПК)</div>`;
+} else if(cs.stage===5){
+stageHtml+=`<div class="narrator">Исследование доказательств: допрос свидетелей, оглашение документов, заключение эксперта.</div>`;
+} else if(cs.stage===6){
+stageHtml+=`<div class="narrator">Прения сторон. Финальные речи.</div>`;
+} else {
+stageHtml+=`<div class="narrator">Суд удаляется в совещательную комнату. Ждём решения.</div>`;
+}
+
+stageHtml+=`<br><div class="score-line">Текущий счёт: <span class="highlight">${cs.score}</span> · Нужно для победы: <span class="highlight">${c.difficulty*3+10}</span> · Действий выполнено: ${pressed.length}/3</div>`;
+
+setStory(stageHtml);
+
+if(cs.stage===7){
+setChoices([{tag:'⚖️',text:'Выслушать решение суда',action:()=>resolveVerdict(cs)}]);
 return;
 }
 
@@ -556,49 +439,136 @@ if(!pressed.includes(ch.letter))b.onclick=()=>stageAction(cs,STAGES[cs.stage].ke
 choicesDiv.appendChild(b);
 });
 
-// Доп. кнопки на стадиях 3 и 5
 if(cs.stage===2&&!cs.interimMeasure){
 const b=document.createElement('button');b.className='choice-btn optional';b.innerHTML=`<span class="choice-tag">🛡</span>ДОПОЛНИТЕЛЬНО: Обеспечительные меры (−15 000 ₽, 5 дней)`;b.onclick=()=>optionalInterim(cs);choicesDiv.appendChild(b);
 }
 if(cs.stage===4&&!cs.counterclaim){
 const b=document.createElement('button');b.className='choice-btn optional';b.innerHTML=`<span class="choice-tag">⚔</span>ДОПОЛНИТЕЛЬНО: Встречный иск (−20 000 ₽, 10 дней)`;b.onclick=()=>optionalCounterclaim(cs);choicesDiv.appendChild(b);
 }
+
+// Кнопка «Завершить стадию» — только если нажато хотя бы одно действие
+if(anyPressed){
+const b=document.createElement('button');
+b.className='choice-btn finish-btn';
+b.innerHTML=`<span class="choice-tag">→</span>Завершить стадию ${cs.stage+1}/8 и перейти к следующей (${STAGES[cs.stage+1].name})`;
+b.onclick=()=>{cs.stage++;showStage()};
+choicesDiv.appendChild(b);
+}
 }
 
-function stageTextA(st){const t=['Направить претензию (обязательно для большинства споров)','Рассчитать госпошлину (ст. 333.19 НК РФ)','Заявить ходатайство о назначении экспертизы','Истребовать доказательства (ст. 57 ГПК / ст. 66 АПК)','Изложить правовую позицию','Допросить свидетеля','Резюмировать ключевые доводы'];return t[st]||''}
+function stageTextA(st){const t=['Направить претензию (ст. 132 ГПК / ст. 4 АПК)','Рассчитать госпошлину (ст. 333.19 НК РФ)','Заявить ходатайство о назначении экспертизы','Истребовать доказательства (ст. 57 ГПК / ст. 66 АПК)','Изложить правовую позицию','Допросить свидетеля','Резюмировать ключевые доводы'];return t[st]||''}
 function stageTextB(st){const t=['Проверить сроки и подсудность','Проверить подсудность (районный/мировой/арбитраж)','Уточнить исковые требования','Привлечь третье лицо','Ответить на доводы оппонента','Огласить письменные доказательства','Указать на процессуальные нарушения'];return t[st]||''}
 function stageTextC(st){const t=['Собрать документы для претензии','Составить приложения к иску','Заявить о вызове свидетелей','Заявить о фальсификации доказательств (ст. 186 ГПК)','Заявить о пропуске срока оппонентом','Задать вопросы эксперту','Ответить на реплику оппонента'];return t[st]||''}
 
+// ==== ОБЕСПЕЧИТЕЛЬНЫЕ МЕРЫ ====
+function optionalInterim(cs){
+const c=cs.case;
+passDays(5);applyEffects({money:-15000,stress:5,energy:-5});renderStats();
+const roll=d20();
+const success=roll+Math.floor(state.knowledge/10)>=10;
+if(success){cs.interimMeasure=true;cs.score+=8;setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">🛡 Обеспечительные меры</div><br><div class="success">✔ Суд удовлетворил ходатайство! Имущество ответчика арестовано. +8 баллов.</div><br><div class="narrator">Бросок: ${roll} · Счёт: <span class="highlight">${cs.score}</span></div>`)}
+else{cs.score=Math.max(0,cs.score-4);setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">🛡 Обеспечительные меры</div><br><div class="failure">✖ Суд отказал. −4 балла, деньги и дни потрачены зря.</div><br><div class="narrator">Бросок: ${roll}</div>`)}
+setTimeout(()=>showStage(),1500);
+}
+
+// ==== ВСТРЕЧНЫЙ ИСК ====
+function optionalCounterclaim(cs){
+const c=cs.case;
+passDays(10);applyEffects({money:-20000,stress:15,energy:-10});renderStats();
+const roll=d20();
+const success=roll+Math.floor(state.knowledge/10)>=12;
+if(success){cs.counterclaim=true;cs.score+=10;setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">⚔ Встречный иск</div><br><div class="success">✔ Суд принял встречный иск! +10 баллов, позиция усилена.</div><br><div class="narrator">Бросок: ${roll} · Счёт: <span class="highlight">${cs.score}</span></div>`)}
+else{cs.score=Math.max(0,cs.score-6);setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">⚔ Встречный иск</div><br><div class="failure">✖ Суд вернул встречный иск (ст. 138 ГПК). −6 баллов, деньги потрачены.</div><br><div class="narrator">Бросок: ${roll} · Счёт: <span class="highlight">${cs.score}</span></div>`)}
+setTimeout(()=>showStage(),1500);
+}
+
+// ==== ДЕЙСТВИЕ НА СТАДИИ ====
+function stageAction(cs,stageKey,letter){
+const c=cs.case;
+const roll=d20();
+const knowledgeBonus=Math.floor(state.knowledge/10);
+const bribeBonus=state.bribeJudge?3:0;
+const stressPenalty=state.stress>60?-3:0;
+let score=0,text='',result='success';
+
+if(stageKey==='pretenziya'){
+if(letter==='A'){score=4+Math.floor(roll/4)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Претензия направлена надлежащим образом, срок соблюдён.':'Претензия направлена с нарушениями (не тот адрес/форма).'}
+else if(letter==='B'){score=3+Math.floor(roll/5)+knowledgeBonus;result=(roll+knowledgeBonus)>=10?'success':'failure';text=(roll+knowledgeBonus)>=10?'Сроки и подсудность проверены — всё в порядке.':'Вы пропустили срок / ошиблись с подсудностью.'}
+else{score=3+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Документы собраны, приложения готовы.':'Не хватает документов для претензии.'}
+} else if(stageKey==='isk'){
+if(letter==='A'){score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Госпошлина рассчитана верно (ст. 333.19 НК).':'Госпошлина рассчитана с ошибкой — иск могут оставить без движения.'}
+else if(letter==='B'){score=3+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Подсудность определена верно.':'Подсудность определена неверно — иск вернут.'}
+else{score=3+Math.floor(roll/6)+knowledgeBonus;result=roll>=6?'success':'failure';text=roll>=6?'Приложения соответствуют ст. 132 ГПК.':'Приложения неполные.'}
+} else if(stageKey==='prelim'){
+if(letter==='A'){score=5+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Экспертиза назначена — это усилит позицию.':'Суд отказал в экспертизе.'}
+else if(letter==='B'){score=3+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Требования уточнены.':'Уточнения отклонены.'}
+else{score=3+Math.floor(roll/6)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Свидетели вызваны.':'Суд отказал в вызове свидетелей.'}
+} else if(stageKey==='motions'){
+if(letter==='A'){score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Доказательства истребованы.':'Суд отказал в истребовании.'}
+else if(letter==='B'){score=3+Math.floor(roll/6)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Третье лицо привлечено.':'Суд отказал в привлечении.'}
+else{score=(roll>=15?8:-4)+Math.floor(roll/5);result=roll>=15?'success':'failure';text=roll>=15?'Заявление о фальсификации удовлетворено — оппонент в шоке.':'Суд отклонил заявление — риск негативных последствий.'}
+} else if(stageKey==='main'){
+if(letter==='A'){score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Позиция изложена чётко.':'Позиция сбивчива.'}
+else if(letter==='B'){score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Вы парировали доводы оппонента.':'Оппонент переиграл вас.'}
+else{score=(c.trap==='srok'?9:2)+Math.floor(roll/4);result=c.trap==='srok'&&roll>=8?'success':'failure';text=c.trap==='srok'&&roll>=8?'Вы заявили о пропуске срока — суд может отказать оппоненту!':'Заявление о сроке не сработало.'}
+} else if(stageKey==='evidence'){
+if(letter==='A'){score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Свидетель путается — вы поймали противоречия.':'Свидетель даёт чёткие показания против вас.'}
+else if(letter==='B'){score=3+Math.floor(roll/6)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Документы оглашены, суд принял.':'Документы признаны недопустимыми.'}
+else{score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Эксперт подтвердил вашу позицию.':'Эксперт дал неоднозначный ответ.'}
+} else if(stageKey==='debates'){
+if(letter==='A'){score=4+Math.floor(roll/5)+knowledgeBonus;result=roll>=7?'success':'failure';text=roll>=7?'Резюме убедительное.':'Резюме скомканное.'}
+else if(letter==='B'){score=3+Math.floor(roll/5)+knowledgeBonus;result=roll>=9?'success':'failure';text=roll>=9?'Нарушения указаны — суд зафиксировал.':'Суд не нашёл нарушений.'}
+else{score=3+Math.floor(roll/6)+knowledgeBonus;result=roll>=8?'success':'failure';text=roll>=8?'Реплика сработала.':'Реплика не удалась.'}
+}
+
+score+=bribeBonus+stressPenalty;
+// Штраф за ошибку: при провале — минус баллы
+if(result==='failure'){score=-Math.max(2,Math.floor(score/2))}
+cs.score=Math.max(0,cs.score+score);
+cs.log.push({stage:cs.stage,stageKey,letter,roll,score:score,result});
+
+const stName=STAGES[cs.stage].name;
+setStory(`
+<div class="case-tag">${c.type} · Дело №${c.id}</div>
+<div class="stage">Стадия ${cs.stage+1}/8: ${stName}</div>
+<br>
+<div class="${result==='success'?'success':'failure'}">${result==='success'?'✔':'✖'} ${text}</div>
+<br>
+<div class="score-line${result==='success'?'':' bad'}">Бросок: ${roll} · Знания: +${knowledgeBonus} · ${result==='success'?'Начислено':'Списано'}: <span class="highlight">${result==='success'?'+':''}${score}</span> · Общий счёт: <span class="highlight">${cs.score}</span></div>
+`);
+applyEffects({stress:2,energy:-2});
+renderStats();
+setTimeout(()=>showStage(),1200);
+}
+
 function resolveVerdict(cs){
 const c=cs.case;
-const threshold=c.difficulty+6;
+const threshold=c.difficulty*3+10;
 const won=!c.unwinnable&&cs.score>=threshold;
 c.resolved=true;
 
 if(won){state.casesWon++;applyEffects({money:cs.fee,reputation:5+Math.floor(c.difficulty/4),stress:-5,knowledge:2});renderStats();
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="success" style="font-size:1.15em;">🏆 РЕШЕНИЕ В ВАШУ ПОЛЬЗУ!</div><br><div class="narrator">Судья оглашает решение: иск удовлетворён. Счёт <span class="highlight">${cs.score}</span> ≥ ${threshold}.</div><br><div class="narrator">Гонорар: <span class="highlight">${cs.fee.toLocaleString('ru-RU')} ₽</span>. Репутация +${5+Math.floor(c.difficulty/4)}.</div>${cs.interimMeasure?'<br><div class="inst">🛡 Благодаря обеспечительным мерам удалось взыскать больше!</div>':''}${cs.counterclaim?'<br><div class="inst">⚔ Встречный иск усилил позицию — взыскание удвоено!</div>':''}`);
+setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="success" style="font-size:1.15em;">🏆 РЕШЕНИЕ В ВАШУ ПОЛЬЗУ!</div><br><div class="narrator">Судья оглашает решение: иск удовлетворён. Счёт <span class="highlight">${cs.score}</span> ≥ ${threshold}.</div><br><div class="narrator">Гонорар: <span class="highlight">${cs.fee.toLocaleString('ru-RU')} ₽</span>. Репутация +${5+Math.floor(c.difficulty/4)}.</div>${cs.interimMeasure?'<br><div class="inst">🛡 Обеспечительные меры помогли взыскать больше!</div>':''}${cs.counterclaim?'<br><div class="inst">⚔ Встречный иск усилил позицию!</div>':''}`);
 setTimeout(()=>{setChoices([
 {tag:'→',text:'Следующее дело',action:startNewCase},
 {tag:'🛋',text:'Отдохнуть 7 дней (энергия +40, стресс −30)',action:()=>{passDays(7);applyEffects({energy:40,stress:-30});renderStats();setStory(`<div class="narrator">Неделя отдыха. Расходы: −${(DAILY_COST*7).toLocaleString('ru-RU')} ₽.</div>`);setTimeout(()=>setChoices([{tag:'→',text:'Вернуться к делам',action:startNewCase}]),1500)}}
 ])},2400)}
 else{
-// АПЕЛЛЯЦИЯ
 state.casesLost++;
 applyEffects({reputation:-3,stress:10,knowledge:3});
 renderStats();
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="failure" style="font-size:1.15em;">✖ В ИСКЕ ОТКАЗАНО</div><br><div class="narrator">Счёт <span class="highlight">${cs.score}</span> < ${threshold}${c.unwinnable?' (дело было невыигрышным)':''}. −3 Репутации, +10 Стресса, +3 Знаний.</div><br><div class="inst">🆕 НОВОЕ: Апелляция (гл. 39 ГПК / гл. 34 АПК)</div><br><div class="narrator">Можно обжаловать решение в апелляционной инстанции. Стоит денег и дней, но даёт шанс пересмотреть дело.</div>`);
+setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="failure" style="font-size:1.15em;">✖ В ИСКЕ ОТКАЗАНО</div><br><div class="narrator">Счёт <span class="highlight">${cs.score}</span> < ${threshold}${c.unwinnable?' (дело было невыигрышным)':''}. −3 Репутации, +10 Стресса, +3 Знаний.</div><br><div class="inst">🆕 Апелляция (гл. 39 ГПК / гл. 34 АПК)</div><br><div class="narrator">Можно обжаловать решение. Стоит денег и дней, но даёт шанс.</div>`);
 setTimeout(()=>setChoices([
-{tag:'📤',text:'Подать апелляцию (−20 000 ₽ госпошлина, 30 дней, шанс ~40%)',action:()=>appealCase(cs)},
+{tag:'📤',text:'Подать апелляцию (−20 000 ₽, 30 дней, шанс ~40%)',action:()=>appealCase(cs)},
 {tag:'❌',text:'Смириться и идти дальше',action:()=>{if(state.money<-50000){gameOver('bankrupt');return}if(state.stress>=100){gameOver('burnout');return}startNewCase()}}
 ]),2400)}
 }
 
-// ==== АПЕЛЛЯЦИЯ ====
 function appealCase(cs){
 const c=cs.case;
 passDays(30);applyEffects({money:-20000,stress:15,energy:-15});renderStats();
 const roll=d20();
-const appealSuccess=roll+Math.floor(state.knowledge/10)+(cs.score>=c.difficulty+3?3:0)>=13;
+const appealSuccess=roll+Math.floor(state.knowledge/10)+(cs.score>=c.difficulty*2?5:0)>=13;
 if(appealSuccess){
 state.casesLost--;state.casesWon++;
 const fee=Math.round(cs.fee*0.7);
@@ -607,14 +577,13 @@ setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class
 setTimeout(()=>{setChoices([{tag:'→',text:'Следующее дело',action:startNewCase}])},2400);
 } else {
 applyEffects({stress:15,reputation:-2});renderStats();
-setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">📤 Апелляция</div><br><div class="failure">✖ Апелляционный суд оставил решение без изменения. Деньги и 30 дней потрачены зря.</div><br><div class="inst">🆕 НОВОЕ: Кассация (гл. 41 ГПК / гл. 35 АПК)</div><br><div class="narrator">Можно подать кассационную жалобу. Очень дорого, но иногда единственный путь.</div>`);
+setStory(`<div class="case-tag">${c.type} · Дело №${c.id}</div><div class="inst">📤 Апелляция</div><br><div class="failure">✖ Апелляционный суд оставил решение без изменения. Деньги и 30 дней потрачены зря.</div><br><div class="inst">🆕 Кассация (гл. 41 ГПК / гл. 35 АПК)</div><br><div class="narrator">Можно подать кассационную жалобу. Очень дорого, но иногда единственный путь.</div>`);
 setTimeout(()=>setChoices([
 {tag:'📤',text:'Подать кассацию (−40 000 ₽, 60 дней, шанс ~20%)',action:()=>cassationCase(cs)},
 {tag:'❌',text:'Смириться и идти дальше',action:()=>{if(state.money<-50000){gameOver('bankrupt');return}if(state.stress>=100){gameOver('burnout');return}startNewCase()}}
 ]),2400)}
 }
 
-// ==== КАССАЦИЯ ====
 function cassationCase(cs){
 const c=cs.case;
 passDays(60);applyEffects({money:-40000,stress:20,energy:-20});renderStats();
@@ -645,7 +614,7 @@ function startChapter2(forced=false){state.chapter=2;renderStats();if(state.case
 setStory(`<div class="narrator">Вечер. Вы за ноутбуком. Дело против УК «СочиЖилСервис».</div><br><div class="narrator">Как готовиться?</div>`);setChoices([
 {tag:'А',text:'Изучить практику по ст. 1102 ГК (потратить энергию, получить бонус).',action:()=>{passDays(5);applyEffects({knowledge:10,energy:-15,money:-500,stress:5});renderStats();setStory(`<div class="success">✔ К полуночи у вас готова чёткая позиция. +10 Знаний.</div>`);setTimeout(startChapter3,1200)}},
 {tag:'Б',text:'Пойти в УК и попытаться решить миром.',action:()=>{passDays(3);const roll=d20();if(state.knowledge+roll>=20){applyEffects({money:20000,reputation:10,energy:-10,stress:10});renderStats();setStory(`<div class="success">✔ УК возвращает 20 000 ₽ без суда!</div>`)}else{applyEffects({energy:-15,stress:15});renderStats();setStory(`<div class="failure">✖ В УК вас выпроваживают. Придётся судиться.</div>`)}setTimeout(startChapter3,1500)}},
-{tag:'В',text:'Позвонить знакомому судье (−5 000 ₽, +2 к удаче).',action:()=>{passDays(1);state.bribeJudge=true;applyEffects({money:-5000,stress:5});renderStats();setStory(`<div class="narrator">Вы звоните знакомому судье. «Коньяк» передан. +2 к удаче.</div>`);setTimeout(startChapter3,1200)}}
+{tag:'В',text:'Позвонить знакомому судье (−5 000 ₽, +3 к удаче).',action:()=>{passDays(1);state.bribeJudge=true;applyEffects({money:-5000,stress:5});renderStats();setStory(`<div class="narrator">Вы звоните знакомому судье. «Коньяк» передан. +3 к удаче.</div>`);setTimeout(startChapter3,1200)}}
 ])}
 
 function startChapter3(){state.chapter=3;renderStats();setStory(`<div class="narrator">Зал №4, Центральный районный суд г. Сочи. Дело против УК.</div><br><div class="narrator">Это ваш первый процесс. Как вести себя?</div>`);const luckBonus=state.bribeJudge?3:0;setChoices([
